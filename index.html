@@ -2,19 +2,23 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>MBC TV Player</title>
     <style>
-        body { background: #111; color: #fff; margin: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        body { background: #000; color: #fff; margin: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #player-container { width: 100%; height: 60vh; background: #000; }
-        #menu { padding: 20px; overflow-y: auto; height: 35vh; }
-        .video-item { padding: 10px; cursor: pointer; border: 2px solid transparent; }
-        .selected { border-color: #ff0000; background: #222; }
+        #menu { padding: 15px; overflow-y: auto; height: 40vh; border-top: 2px solid #333; }
+        .video-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #222; transition: background 0.2s; }
+        .selected { background: #ff0000; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="player-container"><div id="player"></div></div>
-    <div id="menu"><h3>Dernières vidéos MBC</h3><div id="list"></div></div>
+    <div id="menu">
+        <h3 style="margin-top:0;">Dernières vidéos MBC</h3>
+        <div id="list">Chargement des vidéos...</div>
+    </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
@@ -25,16 +29,26 @@
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
                 height: '100%', width: '100%',
-                playerVars: { 'autoplay': 1, 'controls': 0, 'rel': 0, 'modestbranding': 1 }
+                playerVars: { 
+                    'autoplay': 0, 
+                    'controls': 0, 
+                    'rel': 0, 
+                    'modestbranding': 1,
+                    'origin': window.location.origin 
+                }
             });
             fetchVideos();
         }
 
         async function fetchVideos() {
-            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`);
-            const data = await res.json();
-            videos = data.items;
-            renderList();
+            try {
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`);
+                const data = await res.json();
+                videos = data.items;
+                renderList();
+            } catch (err) {
+                document.getElementById('list').innerHTML = "Erreur de chargement. Vérifiez votre connexion.";
+            }
         }
 
         function renderList() {
@@ -42,21 +56,26 @@
             listDiv.innerHTML = videos.map((v, i) => 
                 `<div class="video-item ${i === selectedIndex ? 'selected' : ''}" id="v-${i}">${v.title}</div>`
             ).join('');
-            player.loadVideoById(videos[selectedIndex].videoId);
         }
 
         window.addEventListener("keydown", (e) => {
+            if (videos.length === 0) return;
+
             if (e.key === "ArrowDown" && selectedIndex < videos.length - 1) selectedIndex++;
             if (e.key === "ArrowUp" && selectedIndex > 0) selectedIndex--;
+            
             if (e.key === "Enter") {
                 player.loadVideoById(videos[selectedIndex].videoId);
                 player.playVideo();
             }
             
-            // Mise à jour visuelle de la sélection
+            // Mise à jour visuelle
             document.querySelectorAll('.video-item').forEach(el => el.classList.remove('selected'));
-            document.getElementById(`v-${selectedIndex}`).classList.add('selected');
-            document.getElementById(`v-${selectedIndex}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const selectedEl = document.getElementById(`v-${selectedIndex}`);
+            if(selectedEl) {
+                selectedEl.classList.add('selected');
+                selectedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         });
     </script>
 </body>
