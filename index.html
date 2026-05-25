@@ -2,44 +2,49 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ma TV</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; }
-        .chaine { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #333; cursor: pointer; }
-        .chaine:hover { background: #333; }
-        .logo { width: 50px; height: 50px; margin-right: 15px; background: #000; border-radius: 5px; }
-        .nom { font-weight: bold; }
+        body { background: #121212; color: #ffffff; font-family: sans-serif; padding: 20px; }
+        .chaine { 
+            display: block; 
+            padding: 20px; 
+            margin: 10px 0; 
+            background: #2c2c2c; 
+            border: 2px solid transparent; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            color: white;
+            font-size: 1.2rem;
+        }
+        /* Style spécial pour la sélection à la télécommande */
+        .chaine:focus { 
+            border-color: #ff9900; 
+            background: #444; 
+            outline: none;
+        }
     </style>
 </head>
 <body>
-    <div id="liste">Chargement des chaînes...</div>
-    <script>
-        const url = "http://s.rocketdns.info:8080/get.php?username=39619456&password=57108545&type=m3u_plus&output=ts";
-        fetch("https://corsproxy.io/?" + encodeURIComponent(url))
-            .then(r => r.text())
-            .then(data => {
-                const liste = document.getElementById('liste');
-                liste.innerHTML = "";
-                // Regex pour extraire le nom et le logo
-                const regex = /tvg-logo="(.*?)"|,(.*)/g;
-                const lines = data.split('\n');
-                
-                lines.forEach((line, i) => {
-                    if (line.startsWith('#EXTINF')) {
-                        const logoMatch = line.match(/tvg-logo="(.*?)"/);
-                        const logoUrl = logoMatch ? logoMatch[1] : '';
-                        const name = line.split(',')[1];
-                        const stream = lines[i+1];
+    <div id="liste"></div>
 
-                        const div = document.createElement('div');
-                        div.className = 'chaine';
-                        div.innerHTML = `<img class="logo" src="${logoUrl}" onerror="this.style.display='none'">
-                                         <span class="nom">${name}</span>`;
-                        div.onclick = () => window.location.href = 'player.html?url=' + encodeURIComponent(stream);
-                        liste.appendChild(div);
-                    }
-                });
-            });
+    <script>
+        // Remplace par tes vrais liens
+        const channels = [
+            { name: "Chaîne 1", url: "LIEN_M3U8_1" },
+            { name: "Chaîne 2", url: "LIEN_M3U8_2" }
+        ];
+
+        const container = document.getElementById('liste');
+        channels.forEach(ch => {
+            const a = document.createElement('a');
+            a.className = "chaine";
+            a.innerText = ch.name;
+            a.href = ch.url; // Le clic ouvre directement le lecteur natif
+            a.tabIndex = "0"; // Rend l'élément sélectionnable par télécommande
+            container.appendChild(a);
+        });
     </script>
 </body>
 </html>
