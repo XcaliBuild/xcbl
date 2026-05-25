@@ -2,48 +2,61 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma TV</title>
+    <title>MBC TV Player</title>
     <style>
-        body { background: #121212; color: #ffffff; font-family: sans-serif; padding: 20px; }
-        .chaine { 
-            display: block; 
-            padding: 20px; 
-            margin: 10px 0; 
-            background: #2c2c2c; 
-            border: 2px solid transparent; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            text-decoration: none; 
-            color: white;
-            font-size: 1.2rem;
-        }
-        /* Style spécial pour la sélection à la télécommande */
-        .chaine:focus { 
-            border-color: #ff9900; 
-            background: #444; 
-            outline: none;
-        }
+        body { background: #111; color: #fff; margin: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        #player-container { width: 100%; height: 60vh; background: #000; }
+        #menu { padding: 20px; overflow-y: auto; height: 35vh; }
+        .video-item { padding: 10px; cursor: pointer; border: 2px solid transparent; }
+        .selected { border-color: #ff0000; background: #222; }
     </style>
 </head>
 <body>
-    <div id="liste"></div>
 
+    <div id="player-container"><div id="player"></div></div>
+    <div id="menu"><h3>Dernières vidéos MBC</h3><div id="list"></div></div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // Remplace par tes vrais liens
-        const channels = [
-            { name: "Chaîne XD 1", url: "http://s.rocketdns.info:8080/live/Z3nXfkOnf0/Madt8rUvmN/659439.ts" },
-            { name: "Chaîne 2", url: "LIEN_M3U8_2" }
-        ];
+        const CHANNEL_ID = "UCx5T0Y2T0pB53F4X_uQ521w";
+        let player, videos = [];
+        let selectedIndex = 0;
 
-        const container = document.getElementById('liste');
-        channels.forEach(ch => {
-            const a = document.createElement('a');
-            a.className = "chaine";
-            a.innerText = ch.name;
-            a.href = ch.url; // Le clic ouvre directement le lecteur natif
-            a.tabIndex = "0"; // Rend l'élément sélectionnable par télécommande
-            container.appendChild(a);
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '100%', width: '100%',
+                playerVars: { 'autoplay': 1, 'controls': 0, 'rel': 0, 'modestbranding': 1 }
+            });
+            fetchVideos();
+        }
+
+        async function fetchVideos() {
+            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`);
+            const data = await res.json();
+            videos = data.items;
+            renderList();
+        }
+
+        function renderList() {
+            const listDiv = document.getElementById('list');
+            listDiv.innerHTML = videos.map((v, i) => 
+                `<div class="video-item ${i === selectedIndex ? 'selected' : ''}" id="v-${i}">${v.title}</div>`
+            ).join('');
+            player.loadVideoById(videos[selectedIndex].videoId);
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowDown" && selectedIndex < videos.length - 1) selectedIndex++;
+            if (e.key === "ArrowUp" && selectedIndex > 0) selectedIndex--;
+            if (e.key === "Enter") {
+                player.loadVideoById(videos[selectedIndex].videoId);
+                player.playVideo();
+            }
+            
+            // Mise à jour visuelle de la sélection
+            document.querySelectorAll('.video-item').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`v-${selectedIndex}`).classList.add('selected');
+            document.getElementById(`v-${selectedIndex}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     </script>
 </body>
