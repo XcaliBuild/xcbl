@@ -1,27 +1,47 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <meta charset="UTF-8">
+    <title>Mon App IPTV</title>
     <style>
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 20px; }
-        .card { background: #222; padding: 15px; text-align: center; color: white; cursor: pointer; }
+        body { background: #121212; color: white; font-family: sans-serif; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .card { background: #222; padding: 15px; border-radius: 10px; cursor: pointer; text-align: center; border: 1px solid #444; }
+        .card:hover { background: #333; }
     </style>
 </head>
 <body>
-    <div class="grid" id="menu"></div>
+    <h1>Mes Chaînes</h1>
+    <div class="grid" id="menu">Chargement des chaînes...</div>
 
     <script>
-        fetch('liste.json')
-            .then(res => res.json())
-            .then(data => {
+        // Remplace par ton lien API (Attention : ne diffuse jamais ce lien !)
+        const apiUrl = "http://s.rocketdns.info:8080/get.php?username=TON_USER&password=TON_PASSWORD&type=m3u_plus&output=ts";
+
+        async function init() {
+            try {
+                const res = await fetch(apiUrl);
+                const data = await res.text();
+                const lines = data.split('\n');
                 const menu = document.getElementById('menu');
-                data.channels.forEach(ch => {
-                    const div = document.createElement('div');
-                    div.className = 'card';
-                    div.innerHTML = `<h3>${ch.name}</h3>`;
-                    div.onclick = () => window.location.href = `player.html?url=${encodeURIComponent(ch.url)}`;
-                    menu.appendChild(div);
+                menu.innerHTML = "";
+
+                lines.forEach((line, i) => {
+                    if (line.startsWith('#EXTINF')) {
+                        const name = line.split(',')[1];
+                        const url = lines[i + 1];
+                        const div = document.createElement('div');
+                        div.className = 'card';
+                        div.innerText = name;
+                        div.onclick = () => window.location.href = `player.html?url=${encodeURIComponent(url)}`;
+                        menu.appendChild(div);
+                    }
                 });
-            });
+            } catch (e) {
+                document.getElementById('menu').innerText = "Erreur de chargement.";
+            }
+        }
+        init();
     </script>
 </body>
 </html>
