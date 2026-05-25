@@ -2,41 +2,24 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player</title>
+    <title>Lecteur</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        #video { width: 100%; height: 100%; object-fit: contain; }
-        .back-btn { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; text-decoration: none; border-radius: 5px; z-index: 100; }
+        body { margin: 0; background: #000; height: 100vh; display: flex; flex-direction: column; }
+        video { flex-grow: 1; width: 100%; }
+        .nav { padding: 10px; background: #000; color: white; text-decoration: none; }
     </style>
 </head>
 <body>
-    <a href="index.html" class="back-btn">← Retour</a>
+    <a href="index.html" class="nav">← Retour</a>
     <video id="video" controls autoplay playsinline></video>
 
     <script>
-        async function initPlayer() {
-            const video = document.getElementById('video');
-            const player = new shaka.Player(video);
-            const params = new URLSearchParams(window.location.search);
-            const streamUrl = params.get('url');
+        const video = document.getElementById('video');
+        const player = new shaka.Player(video);
+        const url = new URLSearchParams(window.location.search).get('url');
 
-            if (!streamUrl) {
-                alert("Aucun flux trouvé");
-                return;
-            }
-
-            try {
-                await player.load(streamUrl);
-                video.play();
-            } catch (e) {
-                console.error("Erreur de lecture:", e);
-                alert("Impossible de lire ce flux.");
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', initPlayer);
+        player.load(url).catch(e => console.error("Erreur:", e));
     </script>
 </body>
 </html>
