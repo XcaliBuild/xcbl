@@ -2,48 +2,34 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mon App IPTV</title>
+    <title>IPTV</title>
     <style>
-        body { background: #121212; color: white; font-family: sans-serif; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .card { background: #222; padding: 20px; border-radius: 12px; cursor: pointer; text-align: center; border: 1px solid #444; transition: 0.3s; }
-        .card:hover { background: #444; border-color: #007bff; }
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 10px; }
+        .btn { display: block; padding: 15px; border-bottom: 1px solid #333; cursor: pointer; background: #111; margin-bottom: 5px; border-radius: 5px; }
+        .btn:hover { background: #333; }
     </style>
 </head>
 <body>
-    <h1>Mes Chaînes</h1>
-    <div class="grid" id="menu">Chargement...</div>
-
+    <h2 style="text-align:center;">Ma Liste de Chaînes</h2>
+    <div id="app">Chargement...</div>
     <script>
-        // Ton lien API unique
-        const apiUrl = "http://s.rocketdns.info:8080/get.php?username=39619456&password=57108545&type=m3u_plus&output=ts";
-
-        async function init() {
-            try {
-                const res = await fetch(apiUrl);
-                const data = await res.text();
-                const lines = data.split('\n');
-                const menu = document.getElementById('menu');
-                menu.innerHTML = "";
-
-                lines.forEach((line, i) => {
-                    if (line.startsWith('#EXTINF')) {
-                        const name = line.split(',')[1];
-                        const url = lines[i + 1];
-                        if (url) {
-                            const div = document.createElement('div');
-                            div.className = 'card';
-                            div.innerText = name;
-                            div.onclick = () => window.location.href = `player.html?url=${encodeURIComponent(url)}`;
-                            menu.appendChild(div);
-                        }
-                    }
-                });
-            } catch (e) {
-                document.getElementById('menu').innerHTML = "Erreur : Impossible de contacter le serveur.";
-            }
-        }
-        init();
+        const url = "http://s.rocketdns.info:8080/get.php?username=39619456&password=57108545&type=m3u_plus&output=ts";
+        fetch(url).then(r => r.text()).then(data => {
+            const lines = data.split('\n');
+            const app = document.getElementById('app');
+            app.innerHTML = "";
+            lines.forEach((line, i) => {
+                if (line.includes("#EXTINF")) {
+                    const name = line.split(',')[1];
+                    const stream = lines[i+1];
+                    const div = document.createElement('div');
+                    div.className = 'btn';
+                    div.innerText = name;
+                    div.onclick = () => window.location.href = 'player.html?url=' + encodeURIComponent(stream);
+                    app.appendChild(div);
+                }
+            });
+        });
     </script>
 </body>
 </html>
