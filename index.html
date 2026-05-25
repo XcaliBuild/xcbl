@@ -10,10 +10,10 @@
     </style>
 </head>
 <body>
-    <h2 style="text-align:center;">Ma Liste de Chaînes</h2>
+    <h2 style="text-align:center;">Match Day</h2>
     <div id="app">Chargement...</div>
     <script>
-        const url = "http://s.rocketdns.info:8080/get.php?username=39619456&password=57108545&type=m3u_plus&output=ts";
+        const url = "http://s.rocketdns.info:8080/get.php?username=Z3nXfkOnf0&password=Madt8rUvmN&type=m3u_plus&output=ts";
         fetch(url).then(r => r.text()).then(data => {
             const lines = data.split('\n');
             const app = document.getElementById('app');
