@@ -2,9 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>SÉRIECLUB v1.6 - GitHub Web & Android TV (Lecteur Natif Gallic)</title>
+  <title>SÉRIECLUB v1.7 - GitHub Web & Android TV (Lecteur Natif Gallic & Proxy)</title>
   
-  <!-- Ajout de la librairie HLS.js pour lire le flux .m3u8 -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
   <style>
@@ -210,7 +209,6 @@
   <div id="video-container">
     <div id="player-loading-overlay"><div class="netflix-loader"></div></div>
     
-    <!-- LECTEUR NATIF HTML5 -->
     <video id="native-player" controls autoplay playsinline></video>
     
     <div class="player-top-bar" id="player-top-bar" onclick="closePlayer(event)" tabindex="0">
@@ -478,7 +476,7 @@
     }
 
     /* ═══════════════════════════════════════════
-       LANCEMENT DE L'ÉPISODE (API GALLIC OFFICIELLE)
+       LANCEMENT DE L'ÉPISODE (VIA PROXY CORS)
     ═══════════════════════════════════════════ */
     function launchEpisode(episodeNumber) {
       document.getElementById('series-picker-overlay').style.display = 'none';
@@ -486,14 +484,19 @@
       document.querySelector('#boot-screen .boot-text').textContent = `Recherche Gallic S${activeSeasonNum}E${episodeNumber}...`;
       
       var tmdbId = activeSeriesData.id;
-      var apiUrl = CONFIG.API_BASE + '/tv/' + tmdbId + '/' + activeSeasonNum + '/' + episodeNumber;
       
-      console.log("🔍 Interrogation de l'API Gallic :", apiUrl);
+      // L'URL originale de l'API
+      var rawApiUrl = CONFIG.API_BASE + '/tv/' + tmdbId + '/' + activeSeasonNum + '/' + episodeNumber;
+      
+      // SOLUTION CORS : On emballe l'URL dans un proxy pour passer la sécurité du navigateur
+      var apiUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawApiUrl);
+      
+      console.log("🔍 Interrogation Gallic via Proxy :", apiUrl);
 
       fetch(apiUrl)
         .then(function(res) {
             if (!res.ok) {
-                console.log('[Gallic] API returned HTTP ' + res.status + ' for ' + apiUrl);
+                console.log('[Gallic] API returned HTTP ' + res.status);
                 throw new Error("HTTP " + res.status);
             }
             return res.json();
@@ -504,44 +507,40 @@
             console.log("📦 Réponse Gallic complète :", data);
             var streamUrl = null;
 
-            // Shape 1: { source: { stream_url: "..." } }
-            if (data.source && data.source.stream_url && typeof data.source.stream_url === 'string') {
-                streamUrl = data.source.stream_url;
-            }
-            // Shape 2: { url: "..." }
-            else if (data.url && typeof data.url === 'string') {
-                streamUrl = data.url;
-            }
-            // Shape 3: { stream: "..." }
-            else if (data.stream && typeof data.stream === 'string') {
-                streamUrl = data.stream;
-            }
-            // Shape 4: { sources: [{ url: "..." }, ...] }
-            else if (Array.isArray(data.sources) && data.sources.length > 0) {
-                streamUrl = data.sources[0].url || data.sources[0];
-            }
-            // Shape 5: { data: { url: "..." } }
-            else if (data.data && data.data.url) {
-                streamUrl = data.data.url;
-            }
-            // Shape 6: Plain string URL
-            else if (typeof data === 'string' && data.includes('m3u8')) {
-                streamUrl = data;
-            }
+            if (data.source && data.source.stream_url && typeof data.source.stream_url === 'string') { streamUrl = data.source.stream_url; }
+            else if (data.url && typeof data.url === 'string') { streamUrl = data.url; }
+            else if (data.stream && typeof data.stream === 'string') { streamUrl = data.stream; }
+            else if (Array.isArray(data.sources) && data.sources.length > 0) { streamUrl = data.sources[0].url || data.sources[0]; }
+            else if (data.data && data.data.url) { streamUrl = data.data.url; }
+            else if (typeof data === 'string' && data.includes('m3u8')) { streamUrl = data; }
 
             if (streamUrl) {
                 console.log("🎯 Flux extrait avec succès :", streamUrl);
                 startNativePlayer(streamUrl);
             } else {
-                console.log('[Gallic] Impossible d\'extraire l\'URL du flux depuis : ' + JSON.stringify(data));
+                console.log('[Gallic] Impossible d\'extraire l\'URL du flux.');
                 document.getElementById('boot-screen').style.display = 'none';
                 showNotAvailable(activeSeriesData.name, "Format de réponse Gallic inconnu.");
             }
         })
         .catch(function(err) {
-            console.log('[Gallic] Fetch error: ' + (err && err.message ? err.message : err));
-            document.getElementById('boot-screen').style.display = 'none';
-            showNotAvailable(activeSeriesData.name, "Échec de connexion au serveur Gallic");
+            console.error('[Gallic] Fetch error:', err);
+            
+            // On tente un plan B si corsproxy.io plante (AllOrigins)
+            var backupApiUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawApiUrl);
+            console.log("🔄 Tentative Plan B avec AllOrigins :", backupApiUrl);
+            
+            fetch(backupApiUrl)
+              .then(res2 => res2.json())
+              .then(data2 => {
+                 var streamUrl2 = data2.url || (data2.data && data2.data.url) || data2.stream;
+                 if(streamUrl2) startNativePlayer(streamUrl2);
+                 else throw new Error("No URL in backup");
+              })
+              .catch(err2 => {
+                 document.getElementById('boot-screen').style.display = 'none';
+                 showNotAvailable(activeSeriesData.name, "Échec de connexion au serveur Gallic (CORS)");
+              });
         });
     }
 
