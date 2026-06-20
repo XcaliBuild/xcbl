@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>SÉRIECLUB v1.7 - GitHub Web & Android TV (Lecteur Natif Gallic & Proxy)</title>
+  <title>SÉRIECLUB v1.8 - GitHub Web & Android TV (Lecteur Gallic Multi-Proxys)</title>
   
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
@@ -76,8 +76,6 @@
     .api-status.error .status-dot { background-color: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
     .api-status.ok .status-text { color: #46d369; }
     .api-status.error .status-text { color: var(--secondary); }
-    .api-status svg { width: 14px; height: 14px; fill: var(--secondary); display: none; }
-    .api-status.error svg { display: block; }
     
     .clock-text { font-family: 'Segoe UI', sans-serif; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.55); letter-spacing: 1px; }
 
@@ -133,9 +131,7 @@
 
     /* ───── LECTEUR VIDÉO NATIF ───── */
     #video-container { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 15000; pointer-events: auto; }
-    
     #native-player { width: 100%; height: 100%; background: #000; outline: none; }
-    
     #player-loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; z-index: 16000; pointer-events: none; }
 
     /* BOUTON RETOUR SUPERPOSÉ */
@@ -143,9 +139,14 @@
     .player-top-bar svg { width: 28px; height: 28px; fill: white; }
     .player-top-bar:focus { outline: 2px solid var(--primary); border-radius: 8px; }
 
+    /* ZONE DE LOGS DEBUG ECRAN */
+    #debug-zone { position: fixed; bottom: 0; left: 0; width: 100%; max-height: 25vh; background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace; font-size: 11px; padding: 15px; overflow-y: auto; z-index: 30000; display: none; border-top: 1px solid #0f0; pointer-events: none;}
+    .debug-line { margin-bottom: 4px; word-wrap: break-word; }
   </style>
 </head>
 <body>
+
+  <div id="debug-zone"></div>
 
   <div id="boot-screen">
     <div class="netflix-loader"></div>
@@ -171,10 +172,9 @@
       </div>
       
       <div class="header-right">
-        <div class="api-status ok" id="api-status-btn" tabindex="0" onclick="retryApiConnection()">
+        <div class="api-status ok" id="api-status-btn" tabindex="0" onclick="document.getElementById('debug-zone').style.display = 'block'; screenLog('Mode Debug Activé')">
           <div class="status-dot"></div>
-          <span class="status-text" id="api-status-text">Connecté</span>
-          <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"></path></svg>
+          <span class="status-text" id="api-status-text">Gallic Actif</span>
         </div>
         <span class="clock-text" id="live-clock">--:--</span>
         <div class="search-box">
@@ -208,9 +208,7 @@
 
   <div id="video-container">
     <div id="player-loading-overlay"><div class="netflix-loader"></div></div>
-    
     <video id="native-player" controls autoplay playsinline></video>
-    
     <div class="player-top-bar" id="player-top-bar" onclick="closePlayer(event)" tabindex="0">
       <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
       <span>Retour aux Épisodes</span>
@@ -219,12 +217,22 @@
 
   <script>
     /* ═══════════════════════════════════════════
+       FONCTION DE DIAGNOSTIC ECRAN
+    ═══════════════════════════════════════════ */
+    function screenLog(msg) {
+        var dz = document.getElementById('debug-zone');
+        var d = new Date(); var time = d.getHours()+":"+d.getMinutes()+":"+d.getSeconds();
+        dz.innerHTML += '<div class="debug-line">['+time+'] '+msg+'</div>';
+        dz.scrollTop = dz.scrollHeight;
+        console.log(msg);
+    }
+
+    /* ═══════════════════════════════════════════
        CONFIG GALLIC ET CONTENU TV
     ═══════════════════════════════════════════ */
     const TMDB_API_KEY  = "0442e5116bf1245dce171d5ed8a7748c";
     const VIDEOCLUB_URL = "index.html"; 
 
-    // Configuration officielle API Gallic
     const CONFIG = {
         PROVIDER_NAME: 'Gallic',
         API_BASE: 'https://gallic.aether.bar',
@@ -235,13 +243,11 @@
         }
     };
 
-    // Catalogue des Séries
     const FALLBACK_SERIES_JSON = {
       "🔥 Séries Populaires":  ["Stranger Things", "Fallout", "Shōgun", "The Boys", "House of the Dragon"],
       "🎬 Nouveautés & Tendance": ["3 Body Problem", "Echo", "Loki", "Ahsoka", "Gen V"],
       "😂 Comédies":          ["The Office", "Brooklyn Nine-Nine", "Parks and Recreation", "Friends", "Ted Lasso"],
-      "🧠 Thriller & Mystère":["Severance", "Mindhunter", "Dark", "True Detective", "Black Mirror"],
-      "💥 Action & Aventure": ["The Mandalorian", "Reacher", "Peaky Blinders", "Vikings", "Daredevil"]
+      "🧠 Thriller & Mystère":["Severance", "Mindhunter", "Dark", "True Detective", "Black Mirror"]
     };
 
     var structuralCatalog = {};
@@ -250,9 +256,8 @@
     var activeRowIndex = 0, activeColIndex = 0;
     var previewDebounceTimer = null;
     var isPlayerActive    = false;
-    var hlsInstance       = null; // Instance HLS.js
+    var hlsInstance       = null;
 
-    // Variables Picker Séries
     var activeSeriesData = null; 
     var activeSeasonNum  = null;
     var pickerActiveIndex = 0;
@@ -263,23 +268,12 @@
       initClock();
       document.addEventListener('keydown', handleKeydown);
       history.pushState({ page: "home" }, '', location.href);
-      setApiStatus(true); // Gallic API
     });
 
     function isPlayerOpen() { return document.getElementById('video-container').style.display === 'block'; }
     function isPickerOpen() { return document.getElementById('series-picker-overlay').style.display === 'flex'; }
 
-    function setApiStatus(isOk) {
-      var btn = document.getElementById('api-status-btn'); var txt = document.getElementById('api-status-text');
-      if(isOk) { btn.className = 'api-status ok'; txt.textContent = 'Gallic Actif'; } 
-      else { btn.className = 'api-status error'; txt.textContent = 'Erreur API'; }
-    }
-    
-    function retryApiConnection() { setApiStatus(true); document.getElementById('api-status-text').textContent = 'Recherche...'; }
-
-    function switchMenu(idx) {
-      if (idx === 0) window.location.href = VIDEOCLUB_URL;
-    }
+    function switchMenu(idx) { if (idx === 0) window.location.href = VIDEOCLUB_URL; }
 
     function initClock() {
       function tick() {
@@ -289,7 +283,6 @@
       tick(); setInterval(tick, 1000);
     }
 
-    /* CHARGEMENT TMDB POUR LES SÉRIES */
     function loadSeriesDatabase() {
       structuralCatalog = {}; var promises = [];
       Object.keys(FALLBACK_SERIES_JSON).forEach(function(cat) {
@@ -475,73 +468,93 @@
       if (el) { el.classList.add('focused'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); pickerActiveIndex = idx; }
     }
 
+
     /* ═══════════════════════════════════════════
-       LANCEMENT DE L'ÉPISODE (VIA PROXY CORS)
+       SMART FETCH (LE "BELIER" MULTI-PROXYS)
     ═══════════════════════════════════════════ */
-    function launchEpisode(episodeNumber) {
+    async function smartFetchGallic(url) {
+        screenLog("Début extraction URL: " + url);
+        
+        // METHODE 1 : Fetch Direct (Meilleur scénario si le serveur autorise ton IP/domaine)
+        try {
+            screenLog("[METHODE 1] Attaque Directe...");
+            var r1 = await fetch(url);
+            if(r1.ok) {
+                screenLog("[SUCCES] Fetch Direct OK.");
+                return await r1.json();
+            } else { screenLog("[ECHEC 1] HTTP " + r1.status); }
+        } catch(e) { screenLog("[ECHEC 1] CORS Bloqué ("+e.message+")"); }
+
+        // METHODE 2 : API AllOrigins GET (Trompe le CORS en encapsulant le JSON)
+        try {
+            var allOriginsUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+            screenLog("[METHODE 2] Attaque via AllOrigins...");
+            var r2 = await fetch(allOriginsUrl);
+            if(r2.ok) {
+                var json2 = await r2.json();
+                if(json2.contents) {
+                   screenLog("[SUCCES] AllOrigins OK.");
+                   return JSON.parse(json2.contents);
+                } else { screenLog("[ECHEC 2] Pas de contenu."); }
+            }
+        } catch(e) { screenLog("[ECHEC 2] AllOrigins HS ("+e.message+")"); }
+
+        // METHODE 3 : CodeTabs Proxy (Un autre proxy réputé très robuste)
+        try {
+            var ctUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url);
+            screenLog("[METHODE 3] Attaque via CodeTabs...");
+            var r3 = await fetch(ctUrl);
+            if(r3.ok) {
+                screenLog("[SUCCES] CodeTabs OK.");
+                return await r3.json();
+            } else { screenLog("[ECHEC 3] HTTP " + r3.status); }
+        } catch(e) { screenLog("[ECHEC 3] CodeTabs HS ("+e.message+")"); }
+
+        throw new Error("Toutes les méthodes de connexion ont échoué.");
+    }
+
+
+    /* ═══════════════════════════════════════════
+       LANCEMENT DE L'ÉPISODE (UTILISATION DU BELIER)
+    ═══════════════════════════════════════════ */
+    async function launchEpisode(episodeNumber) {
       document.getElementById('series-picker-overlay').style.display = 'none';
+      document.getElementById('debug-zone').style.display = 'block'; // AFFICHE LES LOGS ECRAN
       document.getElementById('boot-screen').style.display = 'flex';
-      document.querySelector('#boot-screen .boot-text').textContent = `Recherche Gallic S${activeSeasonNum}E${episodeNumber}...`;
+      document.querySelector('#boot-screen .boot-text').textContent = `Piratage Gallic S${activeSeasonNum}E${episodeNumber}...`;
       
       var tmdbId = activeSeriesData.id;
-      
-      // L'URL originale de l'API
       var rawApiUrl = CONFIG.API_BASE + '/tv/' + tmdbId + '/' + activeSeasonNum + '/' + episodeNumber;
-      
-      // SOLUTION CORS : On emballe l'URL dans un proxy pour passer la sécurité du navigateur
-      var apiUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawApiUrl);
-      
-      console.log("🔍 Interrogation Gallic via Proxy :", apiUrl);
 
-      fetch(apiUrl)
-        .then(function(res) {
-            if (!res.ok) {
-                console.log('[Gallic] API returned HTTP ' + res.status);
-                throw new Error("HTTP " + res.status);
-            }
-            return res.json();
-        })
-        .then(function(data) {
-            if (!data) throw new Error("No data returned");
-            
-            console.log("📦 Réponse Gallic complète :", data);
-            var streamUrl = null;
+      try {
+          var data = await smartFetchGallic(rawApiUrl);
+          screenLog("Scan du JSON renvoyé par Gallic...");
 
-            if (data.source && data.source.stream_url && typeof data.source.stream_url === 'string') { streamUrl = data.source.stream_url; }
-            else if (data.url && typeof data.url === 'string') { streamUrl = data.url; }
-            else if (data.stream && typeof data.stream === 'string') { streamUrl = data.stream; }
-            else if (Array.isArray(data.sources) && data.sources.length > 0) { streamUrl = data.sources[0].url || data.sources[0]; }
-            else if (data.data && data.data.url) { streamUrl = data.data.url; }
-            else if (typeof data === 'string' && data.includes('m3u8')) { streamUrl = data; }
+          var streamUrl = null;
 
-            if (streamUrl) {
-                console.log("🎯 Flux extrait avec succès :", streamUrl);
-                startNativePlayer(streamUrl);
-            } else {
-                console.log('[Gallic] Impossible d\'extraire l\'URL du flux.');
-                document.getElementById('boot-screen').style.display = 'none';
-                showNotAvailable(activeSeriesData.name, "Format de réponse Gallic inconnu.");
-            }
-        })
-        .catch(function(err) {
-            console.error('[Gallic] Fetch error:', err);
-            
-            // On tente un plan B si corsproxy.io plante (AllOrigins)
-            var backupApiUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawApiUrl);
-            console.log("🔄 Tentative Plan B avec AllOrigins :", backupApiUrl);
-            
-            fetch(backupApiUrl)
-              .then(res2 => res2.json())
-              .then(data2 => {
-                 var streamUrl2 = data2.url || (data2.data && data2.data.url) || data2.stream;
-                 if(streamUrl2) startNativePlayer(streamUrl2);
-                 else throw new Error("No URL in backup");
-              })
-              .catch(err2 => {
-                 document.getElementById('boot-screen').style.display = 'none';
-                 showNotAvailable(activeSeriesData.name, "Échec de connexion au serveur Gallic (CORS)");
-              });
-        });
+          if (data.source && data.source.stream_url && typeof data.source.stream_url === 'string') { streamUrl = data.source.stream_url; }
+          else if (data.url && typeof data.url === 'string') { streamUrl = data.url; }
+          else if (data.stream && typeof data.stream === 'string') { streamUrl = data.stream; }
+          else if (Array.isArray(data.sources) && data.sources.length > 0) { streamUrl = data.sources[0].url || data.sources[0]; }
+          else if (data.data && data.data.url) { streamUrl = data.data.url; }
+          else if (typeof data === 'string' && data.includes('m3u8')) { streamUrl = data; }
+
+          if (streamUrl) {
+              screenLog("🎯 LIEN M3U8 TROUVÉ ! Démarrage HLS...");
+              setTimeout(() => { document.getElementById('debug-zone').style.display = 'none'; }, 2000); // Masque les logs si ça marche
+              startNativePlayer(streamUrl);
+          } else {
+              screenLog("❌ ERREUR: JSON Gallic reçu mais aucun lien m3u8 trouvé à l'intérieur.");
+              screenLog("Contenu JSON : " + JSON.stringify(data).substring(0, 100) + "...");
+              document.getElementById('boot-screen').style.display = 'none';
+              showNotAvailable(activeSeriesData.name, "Série indisponible sur le serveur.");
+          }
+
+      } catch (err) {
+          screenLog("🚨 ECHEC TOTAL : Le serveur rejette absolument toutes nos requêtes.");
+          document.getElementById('boot-screen').style.display = 'none';
+          showNotAvailable(activeSeriesData.name, "Serveur distant verrouillé (Sécurité CORS absolue).");
+      }
     }
 
     function showNotAvailable(title, reason) {
@@ -553,7 +566,7 @@
     }
 
     /* ═══════════════════════════════════════════
-       LECTEUR VIDÉO NATIF AVEC HLS.JS (NO-REFERRER)
+       LECTEUR VIDÉO NATIF AVEC HLS.JS
     ═══════════════════════════════════════════ */
     function startNativePlayer(m3u8Url) {
       isPlayerActive = true;
@@ -571,36 +584,28 @@
       meta.content = "no-referrer";
       document.head.appendChild(meta);
 
-      // Détruire toute instance HLS précédente
       if (hlsInstance) { hlsInstance.destroy(); }
 
       if (Hls.isSupported()) {
-        hlsInstance = new Hls({
-          // La configuration xhrSetup a été retirée pour éviter l'erreur "Unsafe Headers"
-          // On laisse le navigateur faire la requête naturellement avec le "no-referrer"
-        });
-        
+        hlsInstance = new Hls({});
         hlsInstance.loadSource(m3u8Url);
         hlsInstance.attachMedia(video);
         
         hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
           document.getElementById('player-loading-overlay').style.display = 'none';
-          video.play().catch(e => console.log("Lancement automatique bloqué", e));
-          
-          // Focus sur le bouton retour pour la télécommande
+          video.play().catch(e => screenLog("Lancement auto bloqué (Sécurité Navigateur)"));
           setTimeout(() => { document.getElementById('player-top-bar').focus(); }, 500);
         });
 
         hlsInstance.on(Hls.Events.ERROR, function(event, data) {
           if (data.fatal) {
-             console.error("Détail de l'erreur HLS :", data);
-             showNotAvailable("Sécurité Serveur", "Le flux brut est protégé par le serveur.");
+             screenLog("🚨 ERREUR LECTEUR M3U8 FATALE : " + data.type);
+             showNotAvailable("Erreur Lecteur", "Le flux a été bloqué par le serveur distant.");
              closePlayer();
           }
         });
 
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Fallback natif (Safari / iOS)
         video.src = m3u8Url;
         video.addEventListener('loadedmetadata', function() {
           document.getElementById('player-loading-overlay').style.display = 'none';
@@ -627,6 +632,7 @@
       currentZone = 'episode-picker';
       focusPickerItem(pickerActiveIndex);
       history.pushState({ page: "home" }, '', location.href);
+      document.getElementById('debug-zone').style.display = 'none';
     }
 
     /* ═══════════════════════════════════════════
@@ -634,7 +640,6 @@
     ═══════════════════════════════════════════ */
     function handleKeydown(e) {
       var key = e.keyCode;
-      
       if (key === 27 || key === 10009 || key === 461 || key === 4 || key === 8) {
         if (isPlayerOpen()) { closePlayer(); e.preventDefault(); return; }
         if (isPickerOpen()) {
@@ -663,7 +668,7 @@
       if (key === 37) { activeMenuIndex = Math.max(0, activeMenuIndex - 1); focusMenuItem(activeMenuIndex); }
       else if (key === 39) { if (activeMenuIndex < 2) { activeMenuIndex++; focusMenuItem(activeMenuIndex); } else { currentZone = 'search'; document.getElementById('search-query').focus(); } } 
       else if (key === 40 || key === 13) {
-        if (activeMenuIndex === 2 && key === 13) retryApiConnection();
+        if (activeMenuIndex === 2 && key === 13) document.getElementById('debug-zone').style.display = 'block';
         else if (activeMenuIndex === 0 && key === 13) switchMenu(0);
         else { currentZone = 'catalog'; focusCatalogCard(); }
       }
@@ -695,13 +700,10 @@
        if(document.activeElement === topBar && (key === 13 || key === 32)) {
            closePlayer(e);
        } else if (key === 13 || key === 32) {
-           // Play/Pause avec le bouton central
            if (video.paused) video.play(); else video.pause();
        } else if (key === 37) {
-           // Reculer de 10s avec flèche gauche
            video.currentTime = Math.max(0, video.currentTime - 10);
        } else if (key === 39) {
-           // Avancer de 10s avec flèche droite
            video.currentTime += 10;
        }
     }
