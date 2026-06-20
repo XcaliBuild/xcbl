@@ -1,43 +1,727 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>MBC Player</title>
-    <style>
-        body { background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #player { width: 800px; height: 450px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>SÉRIECLUB v1.6 - GitHub Web & Android TV (Lecteur Natif Gallic)</title>
+  
+  <!-- Ajout de la librairie HLS.js pour lire le flux .m3u8 -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <style>
+    :root {
+      --primary: #00ced1;
+      --secondary: #ff0033;
+      --bg-dark: #070709;
+      --surface: #141419;
+      --text: #ffffff;
+      --card-width: 220px;
+      --card-height: 124px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* ───── BOOT ───── */
+    #boot-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 20000;
+    }
+    .boot-text { color: #fff; font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; }
+    .netflix-loader { width: 38px; height: 38px; border: 4px solid rgba(0,206,209,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spinLoader 0.8s linear infinite; }
+    @keyframes spinLoader { to { transform: rotate(360deg); } }
+
+    /* ───── FOND VIDÉO YOUTUBE ───── */
+    .hero-preview-zone { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; z-index: 1; pointer-events: none; }
+    .hero-bg-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
+    #hero-video-wrapper { position: relative; width: 100%; height: 100%; pointer-events: none; }
+    .hero-video-iframe { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; transform: translate(-50%, -50%) scale(1.8); border: none; pointer-events: none; }
+    .hero-bg-fade { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to right, rgba(7,7,9,1) 0%, rgba(7,7,9,0.5) 45%, transparent 100%), linear-gradient(to top, rgba(7,7,9,1) 0%, rgba(7,7,9,0.4) 40%, transparent 100%); z-index: 2; pointer-events: none; }
+
+    /* ───── LAYOUT PRINCIPAL ───── */
+    .app-layout { position: relative; z-index: 10; display: flex; flex-direction: column; width: 100vw; height: 100vh; pointer-events: none; }
+
+    /* ───── HEADER & STATUS API ───── */
+    .header-zone { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent); pointer-events: auto; }
+    .nav-container { display: flex; align-items: center; gap: 28px; }
+
+    .nav-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; }
+    .nav-bracket-row { display: flex; align-items: center; gap: 5px; }
+    .nav-bracket { font-family: 'Courier New', Courier, monospace; font-size: 17px; font-weight: 900; color: transparent; transition: color 0.2s, opacity 0.2s; line-height: 1; }
+    .text-logo { font-family: 'Courier New', Courier, monospace; font-size: 17px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; transition: color 0.2s; line-height: 1; }
+
+    .nav-item.videoclub .text-logo { color: var(--secondary); text-shadow: 0 0 12px rgba(255,0,51,0.4); }
+    .nav-item.serieclub .text-logo { color: var(--primary); text-shadow: 0 0 12px rgba(0,206,209,0.4); }
+    .nav-item.videoclub.active .text-logo { color: #fff; text-shadow: none; }
+    .nav-item.videoclub.active .nav-bracket { color: #fff; }
+    .nav-item.serieclub.active .text-logo { color: #fff; text-shadow: none; }
+    .nav-item.serieclub.active .nav-bracket { color: var(--primary); }
+    .nav-item:focus, .nav-item.focused { outline: none; transform: scale(1.05); }
+    .nav-item.videoclub.focused .nav-bracket, .nav-item.videoclub:focus .nav-bracket { color: var(--secondary); }
+    .nav-item.serieclub.focused .nav-bracket, .nav-item.serieclub:focus .nav-bracket { color: var(--primary); }
+
+    .header-right { display: flex; align-items: center; gap: 20px; }
+    .api-status { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; background: rgba(20,20,25,0.85); border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+    .api-status:focus, .api-status.focused { border-color: #fff; transform: scale(1.05); outline: none; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .api-status.ok .status-dot { background-color: #46d369; box-shadow: 0 0 8px #46d369; }
+    .api-status.error .status-dot { background-color: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
+    .api-status.ok .status-text { color: #46d369; }
+    .api-status.error .status-text { color: var(--secondary); }
+    .api-status svg { width: 14px; height: 14px; fill: var(--secondary); display: none; }
+    .api-status.error svg { display: block; }
+    
+    .clock-text { font-family: 'Segoe UI', sans-serif; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.55); letter-spacing: 1px; }
+
+    /* BARRE RECHERCHE */
+    .search-box { display: flex; gap: 8px; align-items: center; }
+    .search-input { background-color: rgba(20,20,25,0.85); border: 2px solid transparent; color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; outline: none; width: 190px; transition: all 0.2s; }
+    .search-input:focus, .search-input.focused { border-color: #fff; background-color: #1c1c24; }
+    .search-button { background-color: rgba(20,20,25,0.85); color: white; border: 2px solid transparent; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .search-button svg { width: 16px; height: 16px; fill: white; }
+    .search-button:focus, .search-button.focused { background-color: #fff; }
+    .search-button:focus svg, .search-button.focused svg { fill: #000; }
+
+    /* ───── INFOS DE LA SÉRIE ───── */
+    .hero-text-content { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 44px 32px 44px; max-width: 45%; pointer-events: auto; }
+    .hero-title { font-size: 38px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.9); }
+    .hero-meta { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+    .imdb-badge { background: #f5c518; color: #000; padding: 2px 5px; border-radius: 3px; font-weight: 900; font-size: 11px; }
+    .match-text { color: #46d369; font-weight: bold; }
+    .hero-overview { font-size: 14px; color: #cccccc; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+
+    /* ───── CATALOGUE ───── */
+    .catalog-rows-container { height: 42vh; overflow-y: auto; padding: 0 0 36px 0; display: flex; flex-direction: column; gap: 22px; pointer-events: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .catalog-rows-container::-webkit-scrollbar { display: none; }
+    .catalog-row-wrapper { display: flex; flex-direction: column; }
+    .row-title-container { display: flex; justify-content: space-between; align-items: center; padding: 0 40px 8px 44px; }
+    .row-title { font-size: 16px; font-weight: 700; color: #e2e2e2; }
+    .explore-all { font-size: 12px; color: #666; font-weight: 600; }
+    .horizontal-slider { display: flex; gap: 14px; overflow-x: auto; overflow-y: visible; padding: 8px 40px 8px 44px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .horizontal-slider::-webkit-scrollbar { display: none; }
+
+    /* ───── CARTE 16:9 ───── */
+    .movie-card { width: var(--card-width); height: var(--card-height); flex-shrink: 0; background-color: var(--surface); border-radius: 7px; overflow: visible; border: 3px solid transparent; cursor: pointer; position: relative; box-shadow: 0 4px 14px rgba(0,0,0,0.6); transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+    .card-inner { width: 100%; height: 100%; border-radius: 5px; overflow: hidden; position: relative; }
+    .card-poster { width: 100%; height: 100%; object-fit: cover; display: block; background-color: #1a1a22; }
+    .card-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.55) 55%, transparent 100%); padding: 10px 9px 7px 9px; display: flex; flex-direction: column; gap: 3px; }
+    .card-title { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+    .card-meta-line { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: bold; color: rgba(255,255,255,0.75); }
+    .card-imdb { background: #f5c518; color: #000; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: 900; }
+    .card-match { color: #46d369; }
+    .movie-card:focus, .movie-card.focused { outline: none; transform: scale(1.07); border-color: #ffffff; box-shadow: 0 8px 28px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.15); z-index: 100; }
+
+    /* ───── OVERLAY SÉLECTION SAISON/ÉPISODE ───── */
+    #series-picker-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 14000; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
+    .picker-box { width: 450px; max-height: 80vh; background: #141419; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8); overflow: hidden; }
+    .picker-header { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
+    .picker-title { font-size: 22px; font-weight: 800; margin-bottom: 5px; color: var(--primary); }
+    .picker-subtitle { font-size: 13px; color: #aaa; font-weight: 600; }
+    .picker-list-container { overflow-y: auto; padding: 10px 0; max-height: 400px; scrollbar-width: none; }
+    .picker-list-container::-webkit-scrollbar { display: none; }
+    .picker-item { padding: 16px 24px; font-size: 15px; font-weight: 600; color: #ddd; cursor: pointer; border-left: 4px solid transparent; transition: all 0.1s; display: flex; justify-content: space-between; align-items: center; }
+    .picker-item:focus, .picker-item.focused, .picker-item:hover { outline: none; background: rgba(255,255,255,0.08); border-left-color: var(--primary); color: #fff; }
+    .ep-name { font-size: 13px; font-weight: normal; color: #999; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+
+    /* ───── LECTEUR VIDÉO NATIF ───── */
+    #video-container { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 15000; pointer-events: auto; }
+    
+    #native-player { width: 100%; height: 100%; background: #000; outline: none; }
+    
+    #player-loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; z-index: 16000; pointer-events: none; }
+
+    /* BOUTON RETOUR SUPERPOSÉ */
+    .player-top-bar { position: absolute; top: 0; left: 0; right: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); padding: 30px 40px; display: flex; align-items: center; justify-content: flex-start; gap: 15px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; opacity: 1; transition: opacity 0.25s; z-index: 16100; pointer-events: auto; }
+    .player-top-bar svg { width: 28px; height: 28px; fill: white; }
+    .player-top-bar:focus { outline: 2px solid var(--primary); border-radius: 8px; }
+
+  </style>
 </head>
 <body>
 
-    <div id="player"></div>
+  <div id="boot-screen">
+    <div class="netflix-loader"></div>
+    <div class="boot-text">Chargement SérieClub…</div>
+  </div>
 
-    <script>
-        // Charger l'API IFrame de manière asynchrone
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  <div class="hero-preview-zone" id="hero-banner">
+    <div class="hero-bg-container">
+      <div id="hero-video-wrapper"></div>
+      <div class="hero-bg-fade"></div>
+    </div>
+  </div>
 
-        var player;
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                videoId: 'fJ56-17b88U', // Remplacez par l'ID d'une vidéo spécifique de la MBC
-                playerVars: { 
-                    'autoplay': 1, 
-                    'rel': 0,
-                    'modestbranding': 1
-                },
-                events: {
-                    'onError': onPlayerError
-                }
-            });
+  <div class="app-layout">
+    <div class="header-zone">
+      <div class="nav-container">
+        <div class="nav-item videoclub" id="menu-films" tabindex="0" onclick="switchMenu(0)">
+          <div class="nav-bracket-row"><span class="nav-bracket">[</span><span class="text-logo">VidéoClub</span><span class="nav-bracket">]</span></div>
+        </div>
+        <div class="nav-item active serieclub" id="menu-series" tabindex="0" onclick="switchMenu(1)">
+          <div class="nav-bracket-row"><span class="nav-bracket">[</span><span class="text-logo">SérieClub</span><span class="nav-bracket">]</span></div>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <div class="api-status ok" id="api-status-btn" tabindex="0" onclick="retryApiConnection()">
+          <div class="status-dot"></div>
+          <span class="status-text" id="api-status-text">Connecté</span>
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"></path></svg>
+        </div>
+        <span class="clock-text" id="live-clock">--:--</span>
+        <div class="search-box">
+          <input type="text" id="search-query" class="search-input" placeholder="Rechercher une série…">
+          <button class="search-button" id="search-btn" onclick="triggerSearch()">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="hero-text-content">
+      <h2 class="hero-title" id="hero-title">Chargement…</h2>
+      <div class="hero-meta" id="hero-meta">
+        <span class="imdb-badge">IMDb --</span><span id="hero-year">----</span><span class="match-text" id="hero-match">--% match</span>
+      </div>
+      <p class="hero-overview" id="hero-overview">Sélectionnez un titre pour charger sa bande-annonce.</p>
+    </div>
+    <div class="catalog-rows-container" id="catalog-rows-box"></div>
+  </div>
+
+  <div id="series-picker-overlay">
+    <div class="picker-box">
+      <div class="picker-header">
+        <div class="picker-title" id="picker-title">Titre de la Série</div>
+        <div class="picker-subtitle" id="picker-subtitle">Sélectionnez une Saison</div>
+      </div>
+      <div class="picker-list-container" id="picker-list"></div>
+    </div>
+  </div>
+
+  <div id="video-container">
+    <div id="player-loading-overlay"><div class="netflix-loader"></div></div>
+    
+    <!-- LECTEUR NATIF HTML5 -->
+    <video id="native-player" controls autoplay playsinline></video>
+    
+    <div class="player-top-bar" id="player-top-bar" onclick="closePlayer(event)" tabindex="0">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+      <span>Retour aux Épisodes</span>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════
+       CONFIG GALLIC ET CONTENU TV
+    ═══════════════════════════════════════════ */
+    const TMDB_API_KEY  = "0442e5116bf1245dce171d5ed8a7748c";
+    const VIDEOCLUB_URL = "index.html"; 
+
+    // Configuration officielle API Gallic
+    const CONFIG = {
+        PROVIDER_NAME: 'Gallic',
+        API_BASE: 'https://gallic.aether.bar',
+        HEADERS: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0",
+            "Origin": "https://zebi.senpai-stream.club",
+            "Referer": "https://zebi.senpai-stream.club/"
         }
+    };
 
-        function onPlayerError(event) {
-            console.error("Erreur YouTube code: " + event.data);
-            alert("Erreur de lecture : YouTube bloque l'intégration sur ce domaine.");
+    // Catalogue des Séries
+    const FALLBACK_SERIES_JSON = {
+      "🔥 Séries Populaires":  ["Stranger Things", "Fallout", "Shōgun", "The Boys", "House of the Dragon"],
+      "🎬 Nouveautés & Tendance": ["3 Body Problem", "Echo", "Loki", "Ahsoka", "Gen V"],
+      "😂 Comédies":          ["The Office", "Brooklyn Nine-Nine", "Parks and Recreation", "Friends", "Ted Lasso"],
+      "🧠 Thriller & Mystère":["Severance", "Mindhunter", "Dark", "True Detective", "Black Mirror"],
+      "💥 Action & Aventure": ["The Mandalorian", "Reacher", "Peaky Blinders", "Vikings", "Daredevil"]
+    };
+
+    var structuralCatalog = {};
+    var currentZone       = "catalog"; 
+    var activeMenuIndex   = 1; 
+    var activeRowIndex = 0, activeColIndex = 0;
+    var previewDebounceTimer = null;
+    var isPlayerActive    = false;
+    var hlsInstance       = null; // Instance HLS.js
+
+    // Variables Picker Séries
+    var activeSeriesData = null; 
+    var activeSeasonNum  = null;
+    var pickerActiveIndex = 0;
+    var pickerItemsCount = 0;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSeriesDatabase();
+      initClock();
+      document.addEventListener('keydown', handleKeydown);
+      history.pushState({ page: "home" }, '', location.href);
+      setApiStatus(true); // Gallic API
+    });
+
+    function isPlayerOpen() { return document.getElementById('video-container').style.display === 'block'; }
+    function isPickerOpen() { return document.getElementById('series-picker-overlay').style.display === 'flex'; }
+
+    function setApiStatus(isOk) {
+      var btn = document.getElementById('api-status-btn'); var txt = document.getElementById('api-status-text');
+      if(isOk) { btn.className = 'api-status ok'; txt.textContent = 'Gallic Actif'; } 
+      else { btn.className = 'api-status error'; txt.textContent = 'Erreur API'; }
+    }
+    
+    function retryApiConnection() { setApiStatus(true); document.getElementById('api-status-text').textContent = 'Recherche...'; }
+
+    function switchMenu(idx) {
+      if (idx === 0) window.location.href = VIDEOCLUB_URL;
+    }
+
+    function initClock() {
+      function tick() {
+        var n = new Date();
+        document.getElementById('live-clock').textContent = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+      }
+      tick(); setInterval(tick, 1000);
+    }
+
+    /* CHARGEMENT TMDB POUR LES SÉRIES */
+    function loadSeriesDatabase() {
+      structuralCatalog = {}; var promises = [];
+      Object.keys(FALLBACK_SERIES_JSON).forEach(function(cat) {
+        structuralCatalog[cat] = [];
+        FALLBACK_SERIES_JSON[cat].forEach(function(title) {
+          var p = fetch('https://api.themoviedb.org/3/search/tv?api_key=' + TMDB_API_KEY + '&language=fr-FR&query=' + encodeURIComponent(title))
+            .then(r => r.json()).then(res => {
+              if (res.results && res.results.length > 0) {
+                var m = res.results[0]; m._searchTitle = title; structuralCatalog[cat].push(m);
+              }
+            }).catch(()=>{});
+          promises.push(p);
+        });
+      });
+      Promise.all(promises).then(() => {
+        document.getElementById('boot-screen').style.display = 'none'; buildHorizontalCatalogDOM();
+      });
+    }
+
+    function buildHorizontalCatalogDOM() {
+      var container = document.getElementById('catalog-rows-box'); container.innerHTML = "";
+      var genres = Object.keys(structuralCatalog);
+
+      genres.forEach(function(genre, rIdx) {
+        var shows = structuralCatalog[genre]; if (!shows.length) return;
+        var rowWrapper = document.createElement('div'); rowWrapper.className = 'catalog-row-wrapper'; rowWrapper.id = 'row-wrapper-' + rIdx;
+        rowWrapper.innerHTML = '<div class="row-title-container"><div class="row-title">' + genre + '</div><div class="explore-all">Tout voir ›</div></div>';
+        
+        var slider = document.createElement('div'); slider.className = 'horizontal-slider'; slider.id = 'slider-row-' + rIdx;
+
+        shows.forEach(function(show, cIdx) {
+          var card = document.createElement('div');
+          card.className = 'movie-card'; card.id = 'card-' + rIdx + '-' + cIdx; card.tabIndex = 0;
+          card.setAttribute('data-row', rIdx); card.setAttribute('data-col', cIdx);
+          
+          var posterPath = show.backdrop_path || show.poster_path;
+          var imgSrc = posterPath ? 'https://image.tmdb.org/t/p/w500' + posterPath : '';
+          var rating = show.vote_average ? show.vote_average.toFixed(1) : '--';
+          var year = show.first_air_date ? show.first_air_date.slice(0,4) : '';
+          var title = show.name || show.original_name || ''; 
+          
+          card.innerHTML = '<div class="card-inner"><img class="card-poster" src="' + imgSrc + '" loading="lazy" alt="' + title + '"><div class="card-overlay"><div class="card-title">' + title + '</div><div class="card-meta-line"><span class="card-imdb">' + rating + '</span><span>' + year + '</span><span class="card-match">' + (Math.floor(Math.random()*8)+90) + '% match</span></div></div></div>';
+          
+          card.addEventListener('focus', function() {
+            activeRowIndex = parseInt(this.getAttribute('data-row')); activeColIndex = parseInt(this.getAttribute('data-col'));
+            if(currentZone === 'catalog') schedulePreview(show);
+          });
+          card.addEventListener('click', function() { openSeriesMenu(show); });
+          slider.appendChild(card);
+        });
+        rowWrapper.appendChild(slider); container.appendChild(rowWrapper);
+      });
+
+      var firstCard = document.getElementById('card-0-0');
+      if (firstCard) firstCard.focus();
+      var firstGenre = Object.keys(structuralCatalog)[0];
+      if (firstGenre && structuralCatalog[firstGenre].length) updateHeroBanner(structuralCatalog[firstGenre][0]);
+    }
+
+    function schedulePreview(show) { clearTimeout(previewDebounceTimer); previewDebounceTimer = setTimeout(() => updateHeroBanner(show), 600); }
+
+    function updateHeroBanner(show) {
+      document.getElementById('hero-title').textContent = show.name || show.original_name || '';
+      document.getElementById('hero-overview').textContent = show.overview || 'Aucune description disponible.';
+      document.getElementById('hero-year').textContent = show.first_air_date ? show.first_air_date.slice(0,4) : '';
+      document.getElementById('hero-match').textContent = (Math.floor(Math.random()*8)+90) + '% match';
+      var badge = document.querySelector('#hero-meta .imdb-badge');
+      if (badge) badge.textContent = 'IMDb ' + (show.vote_average ? show.vote_average.toFixed(1) : '--');
+      fetchAndSetTrailer(show.id);
+    }
+
+    function fetchAndSetTrailer(tvId) {
+      fetch('https://api.themoviedb.org/3/tv/' + tvId + '/videos?api_key=' + TMDB_API_KEY + '&language=fr-FR')
+        .then(r => r.json()).then(res => {
+          var key = null;
+          if (res.results && res.results.length) {
+            var t = res.results.find(v => v.type==='Trailer' && v.site==='YouTube');
+            if (!t) t = res.results.find(v => v.site==='YouTube');
+            if (t) key = t.key;
+          }
+          if (!key) {
+            return fetch('https://api.themoviedb.org/3/tv/' + tvId + '/videos?api_key=' + TMDB_API_KEY)
+              .then(r2 => r2.json()).then(res2 => {
+                if (res2.results && res2.results.length) {
+                  var t2 = res2.results.find(v => v.type==='Trailer' && v.site==='YouTube') || res2.results[0];
+                  if (t2) injectYoutubeIframe(t2.key); else clearHeroVideo();
+                } else clearHeroVideo();
+              });
+          }
+          injectYoutubeIframe(key);
+        }).catch(() => clearHeroVideo());
+    }
+
+    function injectYoutubeIframe(key) {
+      var wrapper = document.getElementById('hero-video-wrapper');
+      var old = wrapper.querySelector('iframe'); if (old) old.remove();
+      var iframe = document.createElement('iframe'); iframe.className = 'hero-video-iframe';
+      iframe.src = 'https://www.youtube.com/embed/' + key + '?autoplay=1&mute=0&controls=0&loop=1&playlist=' + key + '&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=0&playsinline=1&disablekb=1';
+      iframe.allow = 'autoplay; encrypted-media'; iframe.allowFullscreen = false;
+      wrapper.appendChild(iframe);
+    }
+    
+    function clearHeroVideo() { 
+      var wrapper = document.getElementById('hero-video-wrapper');
+      var iframe = wrapper.querySelector('iframe');
+      if(iframe) { iframe.src = "about:blank"; iframe.remove(); }
+      wrapper.innerHTML = "";
+    }
+
+    function triggerSearch() {
+      var query = document.getElementById('search-query').value.trim(); if (!query) return;
+      fetch('https://api.themoviedb.org/3/search/tv?api_key=' + TMDB_API_KEY + '&language=fr-FR&query=' + encodeURIComponent(query))
+        .then(r => r.json()).then(res => {
+          if (res.results && res.results.length) {
+            structuralCatalog = {}; structuralCatalog['🔍 Résultats TV : "' + query + '"'] = res.results.slice(0,12);
+            buildHorizontalCatalogDOM();
+          }
+        }).catch(()=>{});
+    }
+
+    /* ═══════════════════════════════════════════
+       MENU SÉLECTION SAISON / ÉPISODE
+    ═══════════════════════════════════════════ */
+    function openSeriesMenu(show) {
+      clearTimeout(previewDebounceTimer); clearHeroVideo();
+      activeSeriesData = show;
+      
+      document.getElementById('picker-title').textContent = show.name || show.original_name;
+      document.getElementById('picker-subtitle').textContent = "Chargement des saisons...";
+      document.getElementById('picker-list').innerHTML = '<div class="netflix-loader" style="margin:20px auto;"></div>';
+      
+      document.getElementById('series-picker-overlay').style.display = 'flex';
+      currentZone = 'season-picker';
+
+      fetch('https://api.themoviedb.org/3/tv/' + show.id + '?api_key=' + TMDB_API_KEY + '&language=fr-FR')
+        .then(r => r.json()).then(res => {
+          var seasons = res.seasons.filter(s => s.season_number > 0);
+          if(!seasons.length) { document.getElementById('picker-subtitle').textContent = "Aucune saison disponible."; return; }
+          
+          document.getElementById('picker-subtitle').textContent = "Sélectionnez une Saison";
+          var listHtml = '';
+          seasons.forEach((s, idx) => {
+            listHtml += `<div class="picker-item" id="p-item-${idx}" onclick="openSeasonMenu(${s.season_number})">Saison ${s.season_number} <span class="ep-name">${s.episode_count} épisodes</span></div>`;
+          });
+          document.getElementById('picker-list').innerHTML = listHtml;
+          pickerItemsCount = seasons.length;
+          focusPickerItem(0);
+        }).catch(() => { document.getElementById('picker-subtitle').textContent = "Erreur de chargement TMDB."; });
+    }
+
+    function openSeasonMenu(seasonNumber) {
+      activeSeasonNum = seasonNumber;
+      document.getElementById('picker-subtitle').textContent = `Saison ${seasonNumber} - Chargement...`;
+      document.getElementById('picker-list').innerHTML = '<div class="netflix-loader" style="margin:20px auto;"></div>';
+      currentZone = 'episode-picker';
+
+      fetch(`https://api.themoviedb.org/3/tv/${activeSeriesData.id}/season/${seasonNumber}?api_key=${TMDB_API_KEY}&language=fr-FR`)
+        .then(r => r.json()).then(res => {
+          if(!res.episodes || !res.episodes.length) { document.getElementById('picker-subtitle').textContent = "Aucun épisode."; return; }
+          
+          document.getElementById('picker-subtitle').textContent = `Saison ${seasonNumber} - Sélectionnez un Épisode`;
+          var listHtml = '';
+          res.episodes.forEach((ep, idx) => {
+            var epTitle = ep.name || `Épisode ${ep.episode_number}`;
+            listHtml += `<div class="picker-item" id="p-item-${idx}" onclick="launchEpisode(${ep.episode_number})">Épisode ${ep.episode_number} <span class="ep-name">${epTitle}</span></div>`;
+          });
+          document.getElementById('picker-list').innerHTML = listHtml;
+          pickerItemsCount = res.episodes.length;
+          focusPickerItem(0);
+        }).catch(() => { document.getElementById('picker-subtitle').textContent = "Erreur de chargement des épisodes."; });
+    }
+
+    function closePicker() {
+      document.getElementById('series-picker-overlay').style.display = 'none';
+      currentZone = 'catalog';
+      var card = document.getElementById('card-' + activeRowIndex + '-' + activeColIndex);
+      if (card) card.focus();
+    }
+
+    function focusPickerItem(idx) {
+      document.querySelectorAll('.picker-item').forEach(el => el.classList.remove('focused'));
+      var el = document.getElementById('p-item-' + idx);
+      if (el) { el.classList.add('focused'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); pickerActiveIndex = idx; }
+    }
+
+    /* ═══════════════════════════════════════════
+       LANCEMENT DE L'ÉPISODE (API GALLIC OFFICIELLE)
+    ═══════════════════════════════════════════ */
+    function launchEpisode(episodeNumber) {
+      document.getElementById('series-picker-overlay').style.display = 'none';
+      document.getElementById('boot-screen').style.display = 'flex';
+      document.querySelector('#boot-screen .boot-text').textContent = `Recherche Gallic S${activeSeasonNum}E${episodeNumber}...`;
+      
+      var tmdbId = activeSeriesData.id;
+      var apiUrl = CONFIG.API_BASE + '/tv/' + tmdbId + '/' + activeSeasonNum + '/' + episodeNumber;
+      
+      console.log("🔍 Interrogation de l'API Gallic :", apiUrl);
+
+      fetch(apiUrl)
+        .then(function(res) {
+            if (!res.ok) {
+                console.log('[Gallic] API returned HTTP ' + res.status + ' for ' + apiUrl);
+                throw new Error("HTTP " + res.status);
+            }
+            return res.json();
+        })
+        .then(function(data) {
+            if (!data) throw new Error("No data returned");
+            
+            console.log("📦 Réponse Gallic complète :", data);
+            var streamUrl = null;
+
+            // Shape 1: { source: { stream_url: "..." } }
+            if (data.source && data.source.stream_url && typeof data.source.stream_url === 'string') {
+                streamUrl = data.source.stream_url;
+            }
+            // Shape 2: { url: "..." }
+            else if (data.url && typeof data.url === 'string') {
+                streamUrl = data.url;
+            }
+            // Shape 3: { stream: "..." }
+            else if (data.stream && typeof data.stream === 'string') {
+                streamUrl = data.stream;
+            }
+            // Shape 4: { sources: [{ url: "..." }, ...] }
+            else if (Array.isArray(data.sources) && data.sources.length > 0) {
+                streamUrl = data.sources[0].url || data.sources[0];
+            }
+            // Shape 5: { data: { url: "..." } }
+            else if (data.data && data.data.url) {
+                streamUrl = data.data.url;
+            }
+            // Shape 6: Plain string URL
+            else if (typeof data === 'string' && data.includes('m3u8')) {
+                streamUrl = data;
+            }
+
+            if (streamUrl) {
+                console.log("🎯 Flux extrait avec succès :", streamUrl);
+                startNativePlayer(streamUrl);
+            } else {
+                console.log('[Gallic] Impossible d\'extraire l\'URL du flux depuis : ' + JSON.stringify(data));
+                document.getElementById('boot-screen').style.display = 'none';
+                showNotAvailable(activeSeriesData.name, "Format de réponse Gallic inconnu.");
+            }
+        })
+        .catch(function(err) {
+            console.log('[Gallic] Fetch error: ' + (err && err.message ? err.message : err));
+            document.getElementById('boot-screen').style.display = 'none';
+            showNotAvailable(activeSeriesData.name, "Échec de connexion au serveur Gallic");
+        });
+    }
+
+    function showNotAvailable(title, reason) {
+      var old = document.getElementById('not-avail-toast'); if (old) old.remove();
+      var toast = document.createElement('div'); toast.id = 'not-avail-toast';
+      toast.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);border:1px solid var(--primary);color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;z-index:20000;text-align:center;box-shadow: 0 4px 15px rgba(0,0,0,0.5);';
+      toast.innerHTML = '<b>' + title + '</b><br><span style="font-size:11px;color:#ccc;">' + (reason || 'Non synchronisé avec le serveur') + '</span>';
+      document.body.appendChild(toast); setTimeout(() => toast.remove(), 4000);
+    }
+
+    /* ═══════════════════════════════════════════
+       LECTEUR VIDÉO NATIF AVEC HLS.JS (NO-REFERRER)
+    ═══════════════════════════════════════════ */
+    function startNativePlayer(m3u8Url) {
+      isPlayerActive = true;
+      currentZone = 'player';
+      
+      var container = document.getElementById('video-container'); 
+      var video = document.getElementById('native-player');
+      container.style.display = 'block';
+      document.getElementById('player-loading-overlay').style.display = 'flex';
+      document.getElementById('boot-screen').style.display = 'none';
+
+      // Astuce Web : On masque totalement d'où vient la requête (No-Referrer)
+      var meta = document.createElement('meta');
+      meta.name = "referrer";
+      meta.content = "no-referrer";
+      document.head.appendChild(meta);
+
+      // Détruire toute instance HLS précédente
+      if (hlsInstance) { hlsInstance.destroy(); }
+
+      if (Hls.isSupported()) {
+        hlsInstance = new Hls({
+          // La configuration xhrSetup a été retirée pour éviter l'erreur "Unsafe Headers"
+          // On laisse le navigateur faire la requête naturellement avec le "no-referrer"
+        });
+        
+        hlsInstance.loadSource(m3u8Url);
+        hlsInstance.attachMedia(video);
+        
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+          document.getElementById('player-loading-overlay').style.display = 'none';
+          video.play().catch(e => console.log("Lancement automatique bloqué", e));
+          
+          // Focus sur le bouton retour pour la télécommande
+          setTimeout(() => { document.getElementById('player-top-bar').focus(); }, 500);
+        });
+
+        hlsInstance.on(Hls.Events.ERROR, function(event, data) {
+          if (data.fatal) {
+             console.error("Détail de l'erreur HLS :", data);
+             showNotAvailable("Sécurité Serveur", "Le flux brut est protégé par le serveur.");
+             closePlayer();
+          }
+        });
+
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Fallback natif (Safari / iOS)
+        video.src = m3u8Url;
+        video.addEventListener('loadedmetadata', function() {
+          document.getElementById('player-loading-overlay').style.display = 'none';
+          video.play();
+        });
+      } else {
+        showNotAvailable("Erreur", "Votre appareil ne supporte pas le format vidéo.");
+        closePlayer();
+      }
+    }
+
+    function closePlayer(e) {
+      if (e) e.stopPropagation();
+      isPlayerActive = false; 
+      
+      var video = document.getElementById('native-player');
+      video.pause();
+      video.removeAttribute('src'); // Vide la source vidéo
+      video.load();
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      
+      document.getElementById('video-container').style.display = 'none';
+      document.getElementById('series-picker-overlay').style.display = 'flex';
+      currentZone = 'episode-picker';
+      focusPickerItem(pickerActiveIndex);
+      history.pushState({ page: "home" }, '', location.href);
+    }
+
+    /* ═══════════════════════════════════════════
+       NAVIGATION TÉLÉCOMMANDE
+    ═══════════════════════════════════════════ */
+    function handleKeydown(e) {
+      var key = e.keyCode;
+      
+      if (key === 27 || key === 10009 || key === 461 || key === 4 || key === 8) {
+        if (isPlayerOpen()) { closePlayer(); e.preventDefault(); return; }
+        if (isPickerOpen()) {
+           if(currentZone === 'episode-picker') { openSeriesMenu(activeSeriesData); } 
+           else { closePicker(); }
+           e.preventDefault(); return;
         }
-    </script>
+        history.pushState({ page: "home" }, '', location.href); e.preventDefault(); return;
+      }
+      
+      if (isPlayerOpen()) { handlePlayerKeys(key, e); return; }
+      if (isPickerOpen()) { handlePickerKeys(key); e.preventDefault(); return; }
+      
+      if (currentZone === 'menu') { handleMenuKeys(key, e); } 
+      else if (currentZone === 'search') { if (key === 13) { triggerSearch(); e.preventDefault(); } else if (key === 40) { currentZone = 'catalog'; focusCatalogCard(); e.preventDefault(); } } 
+      else { handleCatalogKeys(key, e); }
+    }
+
+    function handlePickerKeys(key) {
+      if (key === 38) { pickerActiveIndex = Math.max(0, pickerActiveIndex - 1); focusPickerItem(pickerActiveIndex); }
+      else if (key === 40) { pickerActiveIndex = Math.min(pickerItemsCount - 1, pickerActiveIndex + 1); focusPickerItem(pickerActiveIndex); }
+      else if (key === 13) { document.getElementById('p-item-' + pickerActiveIndex).click(); }
+    }
+
+    function handleMenuKeys(key, e) {
+      if (key === 37) { activeMenuIndex = Math.max(0, activeMenuIndex - 1); focusMenuItem(activeMenuIndex); }
+      else if (key === 39) { if (activeMenuIndex < 2) { activeMenuIndex++; focusMenuItem(activeMenuIndex); } else { currentZone = 'search'; document.getElementById('search-query').focus(); } } 
+      else if (key === 40 || key === 13) {
+        if (activeMenuIndex === 2 && key === 13) retryApiConnection();
+        else if (activeMenuIndex === 0 && key === 13) switchMenu(0);
+        else { currentZone = 'catalog'; focusCatalogCard(); }
+      }
+      e.preventDefault();
+    }
+
+    function handleCatalogKeys(key, e) {
+      var genres = Object.keys(structuralCatalog).filter(g => structuralCatalog[g].length > 0);
+      if (key === 38) {
+        if (activeRowIndex === 0) { currentZone = 'menu'; focusMenuItem(activeMenuIndex); }
+        else { activeRowIndex--; activeColIndex = Math.min(activeColIndex, structuralCatalog[genres[activeRowIndex]].length - 1); focusCatalogCard(); scrollRowIntoView(activeRowIndex); }
+        e.preventDefault();
+      } else if (key === 40) {
+        if (activeRowIndex < genres.length - 1) { activeRowIndex++; activeColIndex = Math.min(activeColIndex, structuralCatalog[genres[activeRowIndex]].length - 1); focusCatalogCard(); scrollRowIntoView(activeRowIndex); }
+        e.preventDefault();
+      } else if (key === 37) {
+        if (activeColIndex > 0) { activeColIndex--; focusCatalogCard(); scrollCardIntoView(activeRowIndex, activeColIndex); } e.preventDefault();
+      } else if (key === 39) {
+        if (structuralCatalog[genres[activeRowIndex]] && activeColIndex < structuralCatalog[genres[activeRowIndex]].length - 1) { activeColIndex++; focusCatalogCard(); scrollCardIntoView(activeRowIndex, activeColIndex); } e.preventDefault();
+      } else if (key === 13) {
+        var card = document.getElementById('card-' + activeRowIndex + '-' + activeColIndex); if (card) card.click(); e.preventDefault();
+      }
+    }
+
+    function handlePlayerKeys(key, e) {
+       var topBar = document.getElementById('player-top-bar');
+       var video = document.getElementById('native-player');
+       
+       if(document.activeElement === topBar && (key === 13 || key === 32)) {
+           closePlayer(e);
+       } else if (key === 13 || key === 32) {
+           // Play/Pause avec le bouton central
+           if (video.paused) video.play(); else video.pause();
+       } else if (key === 37) {
+           // Reculer de 10s avec flèche gauche
+           video.currentTime = Math.max(0, video.currentTime - 10);
+       } else if (key === 39) {
+           // Avancer de 10s avec flèche droite
+           video.currentTime += 10;
+       }
+    }
+
+    function focusMenuItem(idx) { document.querySelectorAll('.nav-item, .api-status').forEach(el => el.classList.remove('focused')); var items = ['menu-films','menu-series', 'api-status-btn']; var el = document.getElementById(items[idx]); if (el) { el.classList.add('focused'); el.focus(); } }
+    function focusCatalogCard() { var card = document.getElementById('card-' + activeRowIndex + '-' + activeColIndex); if (card) card.focus(); }
+    function scrollRowIntoView(rIdx) { var wrapper = document.getElementById('row-wrapper-' + rIdx); if (wrapper) wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    function scrollCardIntoView(rIdx, cIdx) {
+      var slider = document.getElementById('slider-row-' + rIdx), card = document.getElementById('card-' + rIdx + '-' + cIdx); if (!slider || !card) return;
+      var cardLeft = card.offsetLeft - slider.offsetLeft, cardRight = cardLeft + card.offsetWidth, sl = slider.scrollLeft, sw = slider.clientWidth;
+      if (cardLeft < sl + 44) slider.scrollTo({ left: Math.max(0, cardLeft - 44), behavior: 'smooth' });
+      else if (cardRight > sl + sw - 40) slider.scrollTo({ left: cardRight - sw + 40, behavior: 'smooth' });
+    }
+
+    window.addEventListener('popstate', function(e) {
+      if (isPlayerOpen()) { closePlayer(); }
+      else if (isPickerOpen()) { currentZone === 'episode-picker' ? openSeriesMenu(activeSeriesData) : closePicker(); }
+      else { history.pushState({ page: "home" }, '', location.href); }
+    });
+  </script>
 </body>
 </html>
