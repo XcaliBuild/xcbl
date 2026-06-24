@@ -1,0 +1,167 @@
+#EXTM3U
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/d/d2/100%25_Radio_-_logo.png" tvg-country="France" group-title="Généraliste",100% (Pau)
+https://100radio-pau.ice.infomaniak.ch/100radio-pau-128.mp3
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/alouette/images/logo.png" tvg-country="France" group-title="Généraliste",Alouette
+https://alouette.ice.infomaniak.ch/alouette-high.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Logo_BFM_Radio.svg/250px-Logo_BFM_Radio.svg.png" tvg-country="France" group-title="Info",BFM
+https://audio.bfmtv.com/bfmradio_128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/fr/thumb/0/06/BFMBUSINESS-2023.svg/250px-BFMBUSINESS-2023.svg.png" tvg-country="France" group-title="Economie",BFM Business
+https://hls-bfmbusiness.nextradiotv.com/ssai/master.m3u8
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/chante-france/images/logo_hcQoGGMTuD.png" tvg-country="France" group-title="Musique",Chante France
+https://chantefrance.ice.infomaniak.ch/chantefrance-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/e/ec/Ch%C3%A9rie_FM_logo_2012.png" tvg-country="France" group-title="Musique",Chérie FM
+https://streaming.nrjaudio.fm/ou2n2epw5hs7?origine=playercherie&aw_0_req.userConsentV2=&aw_0_1st
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/fr/e/e0/Logo_Europe1.png" tvg-country="France" group-title="Généraliste",Europe1
+https://stream.europe1.fr/europe1.aac
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/5/56/Europe_2_PNG_en_noir.png" tvg-country="France" group-title="Musique",Europe2
+https://europe2.lmn.fm/europe2.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/9/94/Logo_EVASION_Officiel.png" tvg-country="France" group-title="Musique",Évasion FM - Paris
+https://stream1.evasionfm.com/Paris
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/1/16/FIP_logo_2021.svg" tvg-country="France" group-title="Musique",FIP
+https://icecast.radiofrance.fr/fip-hifi.aac?id=radiofrance
+#EXTINF:-1 tvg-logo="https://www.wikiberal.org/images/thumb/a/a3/France_culture_logo.jpg/800px-France_culture_logo.jpg" tvg-country="France" group-title="Culture",France Culture
+https://icecast.radiofrance.fr/franceculture-hifi.aac?id=radiofrance
+#EXTINF:-1 tvg-logo="https://www.mnlienemann.fr/wp-content/uploads/2016/02/Logo_France_Info1.jpg" tvg-country="France" group-title="Info",France Info
+https://tvradiozap.eu/tools/dm-m3u8.php/x26eox4
+#EXTINF:-1 tvg-logo="https://www.comitys.com/wp-content/uploads/2019/06/france-inter-logo.jpg" tvg-country="France" group-title="Généraliste",France Inter
+https://tvradiozap.eu/tools/dm-m3u8.php/x17qw0a
+#EXTINF:-1 tvg-logo="https://musiquesactuelles.bzh/wp-content/uploads/2019/04/logo-france-musique-750x360-2-4.jpg" tvg-country="France" group-title="Musique",France Musique
+https://icecast.radiofrance.fr/francemusique-hifi.aac?id=radiofrance
+#EXTINF:-1 tvg-logo="https://generations.fr/media/option/logo.webp" tvg-country="France" group-title="Musique",Générations
+https://generationfm.ice.infomaniak.ch/generationfm-high.mp3
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/hitwest/radiostream/2dKIPUozEB/vignette_Yblrd4JGQK.png" tvg-country="France" group-title="Musique",Hit West
+https://stream.rcs.revma.com/nvsuedfwcy3vv
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/hitwest/radiostream/RZmR3sdxI8/vignette_xd33NXjkd5.png" tvg-country="France" group-title="Musique",Hit West 2000
+https://stream.rcs.revma.com/uttd3ygkwk3vv
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/filters:format%28webp%29/radios/hitwest/radiostream/C3YoW6KWlE/vignette_bmnWkpjKn8.png" tvg-country="France" group-title="Musique",Hit West 80
+https://stream.rcs.revma.com/ens21efbyrcwv
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/filters:format%28webp%29/radios/hitwest/radiostream/vbB7gJwfWw/vignette_26v4EGrevd.png" tvg-country="France" group-title="Musique",Hit West 90
+https://stream.rcs.revma.com/93ez15uhgm3vv
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/hitwest/radiostream/Fddzf9wVwO/vignette_rTsW1DnYx9.png" tvg-country="France" group-title="Musique",Hit West Fresh Hits
+https://stream.rcs.revma.com/b36c78463p3vv
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/hitwest/radiostream/TRFrk2t83A/vignette_ixF8eYjPkI.png" tvg-country="France" group-title="Musique",Hit West Hits du moment
+https://stream.rcs.revma.com/84g6y0xa3zcwv
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Ici_Paris_%C3%8Ele-de-France.svg/330px-Ici_Paris_%C3%8Ele-de-France.svg.png" tvg-country="France" group-title="Généraliste",Ici Paris Île-de-France
+https://direct.francebleu.fr/live/fb1071-midfi.mp3?id=radiofrance
+#EXTINF:-1 tvg-logo="https://www.impactfm.fr/img/str/logo.png" tvg-country="France" group-title="Musique",Impact FM
+https://impactfm.ice.infomaniak.ch/impactfm-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/0/06/Jazz-radio.png" tvg-country="France" group-title="Musique",Jazz Radio
+https://jazzradio.ice.infomaniak.ch/jazzradio-high.aac
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/latina/images/logo_ekL0UKRumu.png" tvg-country="France" group-title="Musique",Latina
+https://start-latina.ice.infomaniak.ch/start-latina-high.mp3
+#EXTINF:-1 tvg-logo="https://mradio.fr/media/option/logo.webp" tvg-country="France" group-title="Généraliste",M Radio
+https://mfm.ice.infomaniak.ch/mradio-ile-de-france.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/a/a9/Mouv%27_Logo_Small.png" tvg-country="France" group-title="Musique",Mouv'
+https://tvradiozap.eu/tools/dm-m3u8.php/x8g9lfe
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/fr/0/0b/Nostalgie_logo_2015.png" tvg-country="France" group-title="Musique",Nostalgie
+https://streaming.nrjaudio.fm/ouwgwqsk6j4d?origine=playernostalgie&aw_0_req
+#EXTINF:-1 tvg-logo="https://e7.pngegg.com/pngimages/469/239/png-clipart-nrj-group-nrj-hits-internet-radio-nrj-international-in-maintenance-text-fm-broadcasting.png" tvg-country="France" group-title="Musique",NRJ
+https://streaming.nrjaudio.fm/oufdfatx4thg
+#EXTINF:-1 tvg-logo="https://medias.lesindesradios.fr/t:app(web)/t:r(BFPipuyZzl)/fit-in/300x2000/filters:format(webp)/radios/oceane/radiostream/QowI9cmIMT/vignette_acFJQ25Own.png" tvg-country="France" group-title="Musique",Océane Disco Fun
+https://stream.rcs.revma.com/0e8gfwwc0znwv
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/oui-fm/images/logo_KoooUByHla.png" tvg-country="France" group-title="Musique",Oüi FM
+https://ouifm.ice.infomaniak.ch/ouifm-high.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/France_1_2018.svg/langfr-330px-France_1_2018.svg.png" tvg-country="France" group-title="Généraliste",Outre-mer la 1ère
+https://outremer.ice.infomaniak.ch/outremer-128.mp3
+#EXTINF:-1 tvg-logo="https://static.tuneyou.com/images/logos/500_500/23/8723/PureElectroRadio_8.png" tvg-country="France" group-title="Musique",Pure Electro Radio
+https://str0.creacast.com/purelectro
+#EXTINF:-1 tvg-logo="https://www.radiobonheur.com/blog/images/logoRB_new.jpg" tvg-country="France" group-title="Musique",Radio Bonheur
+https://radiobonheur.ice.infomaniak.ch/radiobonheur-128-1.mp3
+#EXTINF:-1 tvg-logo="https://www.radioclassique.fr/wp-content/thumbnails/uploads/2018/11/logo-rc-2014-copie-tt-width-600-height-600-crop-1-bgcolor-ffffff-amp-1.png" tvg-country="France" group-title="Musique",Radio Classique
+https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3
+#EXTINF:-1 tvg-logo="https://www.radioespace.com/media/option/logo-2021.webp" tvg-country="France" group-title="Musique",Radio Espace
+https://radioespace.ice.infomaniak.ch:8000/radioespace-high.mp3
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/radiofg/images/logo_J1uBFLTl35.png" tvg-country="France" group-title="Musique",Radio FG
+https://radiofg.impek.com/fg
+#EXTINF:-1 tvg-logo="https://www.nova.fr/wp-content/thumbnails/uploads/sites/2/2022/12/Radio-Nova-en-direct-t-400x496.png" tvg-country="France" group-title="Musique",Radio Nova
+https://radionova.ice.infomaniak.ch/radionova-256.aac
+#EXTINF:-1 tvg-logo="https://play-lh.googleusercontent.com/dpgNVyyMvRP40HohjUyK4_yJiuCo8ihgJQ8IBSFrZ_lAsiY1mflKtO5srFiaTlSnzSP-" tvg-country="France" group-title="Musique Info",Radio Vinci Autoroute
+https://str0.creacast.com/radio_vinci_autoroutes_1
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/RFI_logo_2013.svg/langfr-1920px-RFI_logo_2013.svg.png" tvg-country="France" group-title="Généraliste",RFI Afrique
+https://rfimonde64k.ice.infomaniak.ch/rfiafrique-64.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/RFI_logo_2013.svg/langfr-1920px-RFI_logo_2013.svg.png" tvg-country="France" group-title="Généraliste",RFI Monde
+https://rfimonde64k.ice.infomaniak.ch/rfimonde-64.mp3
+#EXTINF:-1 tvg-logo="https://w1.pngwing.com/pngs/356/304/png-transparent-logo-text-rire-chansons-character-fandom-area-signage.png" tvg-country="France" group-title="Rire Musique",Rire & Chansons
+https://streaming.nrjaudio.fm/oua8afw2dqao?origine=playerrire&aw_0_req.userConsentV2=&aw_0_1st.station=
+#EXTINF:-1 tvg-logo="https://www.lalettre.pro/photo/art/grande/23457540-25728561.jpg" tvg-country="France" group-title="Généraliste",RMC
+https://audio.bfmtv.com/rmcradio_128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/b/bf/RTL_T%C3%A9l%C3%A9_L%C3%ABtzebuerg_-_Logo.png" tvg-country="France" group-title="Généraliste",RTL
+https://tvradiozap.eu/tools/dm-m3u8.php/xl1km0.m3u8#tvrz=nolist
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/fr/5/51/RTL2.png" tvg-country="France" group-title="Musique",RTL2
+https://tvradiozap.eu/tools/dm-m3u8.php/x2tzzpj.m3u8#tvrz=nolist
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Skyrock_2011_logo.png/330px-Skyrock_2011_logo.png" tvg-country="France" group-title="Musique",Skyrock
+https://icecast.skyrock.net/s/natio_aac_128k?tvr_name=website_fm_app&tvr_section2=2.0&deviceId=8F7AEBA96619409CA3E74B46727569DD&listenerId=a2d7eb83-81fa-4985-9d3b-b065b3dec69f&aw_0_req.userConsentV2=CQXekwAQXekwAAHABBENB7FgAAAAAEPgAAqIAAAMNgOgALAAqABcADgAIAAVAAyABoAEcAJgAUABCACOAE4AMqAdwB3gD9AIQARwA2gB7QD_gJiATSAo8BTQC1AF5gMNAAAA.YAAACHwAAAAA&token=WE2%24aMCEIA%24HAolgrIMEt1NEUc2jgD6uPDIqbZp8hXDtFxf9KFxEQc&rgpd_status=ok&tvr_section3=html5&ts=1757447200
+#EXTINF:-1 tvg-logo="https://www.sudradio.fr/wp-content/uploads/2019/05/logonb.png" tvg-country="France" group-title="Généraliste",Sud Radio
+https://tvradiozap.eu/tools/dm-m3u8.php/x8jqxru
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/top-music/images/logo.png" tvg-country="France" group-title="Musique",Top Music
+https://str0.creacast.com/topmusic1
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/fr/7/7a/Logo_tropiquesFM.png" tvg-country="France" group-title="Régional",Tropiques FM
+https://listen.radioking.com/radio/8916/stream/19088
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/TSFJazz-2017.jpg/330px-TSFJazz-2017.jpg" tvg-country="France" group-title="Musique",TSF Jazz
+https://tsfjazz.ice.infomaniak.ch/tsfjazz-high.mp3
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/urbanhit/images/logo.png" tvg-country="France" group-title="Musique",Urban Hit
+https://onlyrai.ice.infomaniak.ch/onlyrai-high.mp3
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/vibration/images/logo_A88whB8Nny.png" tvg-country="France" group-title="Musique",Vibration
+https://webvib-region.ice.infomaniak.ch/webvib-region-128.mp3?token=exp%3D1757447782~acl%3D%2Fwebvib-region-128~hmac%3D5d32725dce82a4efd6287e1c3dc87c9edf62798850124a43aa695dd666510c0c
+#EXTINF:-1 tvg-logo="https://images.lesindesradios.fr/fit-in/300x2000/radios/voltage/images/logo_QNDx5cC0eN.png" tvg-country="France" group-title="Généraliste",Voltage
+https://voltage.ice.infomaniak.ch/start-voltage-high.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Guadeloupe_La_1%C3%A8re.svg/330px-Guadeloupe_La_1%C3%A8re.svg.png" tvg-country="France Guadeloupe" group-title="Généraliste",Guadeloupe 1ère
+https://guadeloupe.ice.infomaniak.ch/guadeloupe-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Guyane_La_1%C3%A8re_-_Logo_2018.svg/330px-Guyane_La_1%C3%A8re_-_Logo_2018.svg.png" tvg-country="France Guyane" group-title="Généraliste",Guyane 1ère
+https://guyane.ice.infomaniak.ch/guyane-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Martinique_La_1%C3%A8re_-_Logo_2018.svg/330px-Martinique_La_1%C3%A8re_-_Logo_2018.svg.png" tvg-country="France Martinique" group-title="Généraliste",Martinique 1ère
+https://martinique.ice.infomaniak.ch/martinique-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Mayotte_La_1%C3%A8re_-_Logo_2018.svg/langfr-330px-Mayotte_La_1%C3%A8re_-_Logo_2018.svg.png" tvg-country="France Mayotte" group-title="Généraliste",Mayotte 1ère
+https://mayotte.ice.infomaniak.ch/mayotte-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/R%C3%A9union_La_1%C3%A8re_-_Logo_2018.svg/330px-R%C3%A9union_La_1%C3%A8re_-_Logo_2018.svg.png" tvg-country="France Réunion" group-title="Généraliste",Réunion 1ère
+https://reunion.ice.infomaniak.ch/reunion-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Saint-Pierre_%26_Miquelon_La_1%C3%A8re_-_Logo_2018.svg/langfr-330px-Saint-Pierre_%26_Miquelon_La_1%C3%A8re_-_Logo_2018.svg.png" tvg-country="France St Pierre et Miq." group-title="Généraliste",St Pierre et Miquelon 1ère
+https://saint-pierreetmiquelon.ice.infomaniak.ch/saint-pierreetmiquelon-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Wallis_%26_Futuna_La_1%C3%A8re_-_Logo_2018.svg/330px-Wallis_%26_Futuna_La_1%C3%A8re_-_Logo_2018.svg.png" tvg-country="France Wallis" group-title="Généraliste",Wallis et Futuna 1ère
+https://wallisetfutuna.ice.infomaniak.ch/wallisetfutuna-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/RTBF_Classic_21_logo.svg/330px-RTBF_Classic_21_logo.svg.png" tvg-country="Belgique" group-title="Musique",Classic 21 (RTBF)
+https://radios.rtbf.be/classic21-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/JAM_LOGO_1920x1080_-_fond_blanc.png/330px-JAM_LOGO_1920x1080_-_fond_blanc.png" tvg-country="Belgique" group-title="Musique Info",Jam (RTBF)
+https://redbeemedia.streamabc.net/redbm-jam-aac-128-2378259
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/RTBF_La_Premi%C3%A8re_logo.svg/langfr-330px-RTBF_La_Premi%C3%A8re_logo.svg.png" tvg-country="Belgique" group-title="Généraliste",La 1ère (RTBF)
+https://c9851ec-rbm-hilv-fsly.cdn.redbee.live/L5/3264727f/d0a3cb71.isml/.m3u8
+#EXTINF:-1 tvg-logo="https://images.squarespace-cdn.com/content/v1/6385c8580102646f4d1aef54/635ba434-f8a8-46f1-b918-ab7ef1db3c61/Logo-LNRADIO-baseline-white.png" tvg-country="Belgique" group-title="Musique Info",LN Radio
+https://n02a-eu.rcs.revma.com/th89pet3pzzuv
+#EXTINF:-1 tvg-logo="https://www.rtbfmedia.be/logo-rtbf/musiq3/logo/COULEUR/LOGO_M3_RVB_FILET_15.png" tvg-country="Belgique" group-title="Musique",Musiq3 (RTBF)
+https://radios.rtbf.be/musiq3-128.mp3
+#EXTINF:-1 tvg-logo="https://hainaut.sudradio.net/wp-content/themes/SudRadio-2020/assets/img/SudRadioHNTLowRes.png" tvg-country="Belgique" group-title="Généraliste",Sud Radio (BE)
+https://stream.ceit.be/sudradio-hainaut
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Tarmac_%28m%C3%A9dia%29.jpg/330px-Tarmac_%28m%C3%A9dia%29.jpg" tvg-country="Belgique" group-title="Musique",Tarmac (RTBF)
+https://redbeemedia.streamabc.net/redbm-tarmac-aac-128-8924787
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Tipikrtbf.png/330px-Tipikrtbf.png" tvg-country="Belgique" group-title="Généraliste",Tipik (RTBF)
+https://radio.rtbf.be/tipik/aac-128/fl
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Viva%2BLOGO.png/330px-Viva%2BLOGO.png" tvg-country="Belgique" group-title="Musique",Viva+ (RTBF)
+https://radio.rtbf.be/vivaplus/aac-128/rp-mob
+#EXTINF:-1 tvg-logo="https://ds.static.rtbf.be/article/image/1248x702/9/d/7/1cfbca0ddf3d2345964403e924f94892-1441022567.jpg" tvg-country="Belgique" group-title="Généraliste",VivaCité Brabant Wallon (RTBF)
+https://radios.rtbf.be/vivabw-128.mp3
+#EXTINF:-1 tvg-logo="https://ds.static.rtbf.be/article/image/1248x702/9/d/7/1cfbca0ddf3d2345964403e924f94892-1441022567.jpg" tvg-country="Belgique" group-title="Généraliste",VivaCité Bruxelles (RTBF)
+https://radios.rtbf.be/vivabxl-64.aac
+#EXTINF:-1 tvg-logo="https://ds.static.rtbf.be/article/image/1248x702/9/d/7/1cfbca0ddf3d2345964403e924f94892-1441022567.jpg" tvg-country="Belgique" group-title="Généraliste",VivaCité Charleroi (RTBF)
+https://radios.rtbf.be/vivacharleroi-128.mp3
+#EXTINF:-1 tvg-logo="https://ds.static.rtbf.be/article/image/1248x702/9/d/7/1cfbca0ddf3d2345964403e924f94892-1441022567.jpg" tvg-country="Belgique" group-title="Généraliste",VivaCité Hainaut (RTBF)
+https://radios.rtbf.be/vivahainaut-128.mp3
+#EXTINF:-1 tvg-logo="https://ds.static.rtbf.be/article/image/1248x702/9/d/7/1cfbca0ddf3d2345964403e924f94892-1441022567.jpg" tvg-country="Belgique" group-title="Généraliste",VivaCité Liège (RTBF)
+https://radios.rtbf.be/vivaliege-128.mp3
+#EXTINF:-1 tvg-logo="https://ds.static.rtbf.be/article/image/1248x702/9/d/7/1cfbca0ddf3d2345964403e924f94892-1441022567.jpg" tvg-country="Belgique" group-title="Généraliste",VivaCité Luxembourg (RTBF)
+https://radios.rtbf.be/vivalux-128.mp3
+#EXTINF:-1 tvg-logo="https://ds.static.rtbf.be/article/image/1248x702/9/d/7/1cfbca0ddf3d2345964403e924f94892-1441022567.jpg" tvg-country="Belgique" group-title="Généraliste",VivaCité Namur (RTBF)
+https://radios.rtbf.be/vivanamurbw-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Nouvelle_Cal%C3%A9donie_La_1%C3%A8re_-_Logo_2018.svg/langfr-330px-Nouvelle_Cal%C3%A9donie_La_1%C3%A8re_-_Logo_2018.svg.png" tvg-country="Nouvelle-Calédonie" group-title="Généraliste",Nouvelle Calédonie 1ère
+https://nouvelle-caledonie.ice.infomaniak.ch/nouvelle-caledonie-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Polyn%C3%A9sie_La_1%C3%A8re_-_Logo_2018.svg/langfr-330px-Polyn%C3%A9sie_La_1%C3%A8re_-_Logo_2018.svg.png" tvg-country="Polynésie Française" group-title="Généraliste",Polynésie 1ère
+https://polynesie.ice.infomaniak.ch/polynesie-128.mp3
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/RougeFM_Simplifie_COUL.png/330px-RougeFM_Simplifie_COUL.png" tvg-country="Suisse" group-title="Généraliste",Rouge FM
+https://rougefm.ice.infomaniak.ch/rougefm-high.mp3
+#EXTINF:-1 tvg-logo="https://www.rts.ch/2017/11/02/14/05/9051701.image" tvg-country="Suisse" group-title="Généraliste",RTS Couleur3
+https://visualradio-rts-couleur3-d.akamaized.net/out/v1/6a1472634ad745f59a9e63ee8adbbc00/index.m3u8
+#EXTINF:-1 tvg-logo="https://www.rts.ch/2017/11/02/14/05/9051698.image" tvg-country="Suisse" group-title="Culture",RTS Espace 2
+https://stream.srg-ssr.ch/m/espace-2/mp3_128
+#EXTINF:-1 tvg-logo="https://www.rts.ch/2017/11/02/12/03/9051197.image" tvg-country="Suisse" group-title="Généraliste",RTS La Première
+https://stream.srg-ssr.ch/m/la-1ere/mp3_128
+#EXTINF:-1 tvg-logo="https://www.rts.ch/2017/11/02/14/05/9051703.image" tvg-country="Suisse" group-title="Musique",RTS Option musique
+https://stream.srg-ssr.ch/m/option-musique/mp3_128
