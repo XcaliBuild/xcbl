@@ -3,369 +3,390 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Smart Hub OS</title>
+<title>Smart Hub - Swipe OS</title>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
     :root {
         --font: 'Google Sans', -apple-system, sans-serif;
-        --bg-img: url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=2070');
-        --card-bg: rgba(30, 30, 30, 0.6);
-        --card-border: rgba(255, 255, 255, 0.1);
-        --text-primary: #ffffff;
-        --text-secondary: rgba(255, 255, 255, 0.7);
-        --icon-color: #ffffff;
-        --blur: 25px;
+        --bg: #000;
+        --glass-bg: rgba(20, 20, 20, 0.65);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-main: #ffffff;
+        --text-dim: rgba(255, 255, 255, 0.7);
         --accent: #a8c7fa;
-        --idle-color: #ffffff;
     }
 
-    body.light-glass {
-        --card-bg: rgba(255, 255, 255, 0.7); --card-border: rgba(0, 0, 0, 0.1);
-        --text-primary: #202124; --text-secondary: #5f6368;
-        --icon-color: #202124; --accent: #0b57d0;
-    }
-    body.blue-glass { --card-bg: rgba(10, 40, 80, 0.6); --accent: #8ab4f8; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+    body { font-family: var(--font); color: var(--text-main); background: var(--bg); overflow: hidden; width: 100vw; height: 100vh; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-    body { font-family: var(--font); color: var(--text-primary); overflow: hidden; background: #000; height: 100vh; width: 100vw; transition: color 0.5s; }
-
-    /* Arrière-plan global */
+    /* --- FOND D'ÉCRAN --- */
     .background {
-        position: absolute; inset: 0; z-index: -2;
-        background-image: var(--bg-img);
-        background-size: cover; background-position: center;
-        transition: filter 0.8s ease, opacity 0.8s ease;
+        position: absolute; inset: 0; z-index: -1;
+        background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070') center/cover;
+        filter: brightness(0.7) blur(10px);
+        transition: opacity 0.5s;
     }
-    body.standby-mode .background { opacity: 0; /* Fond noir OLED */ }
 
-    /* --- MODE VEILLE (IDLE) --- */
-    #idle-screen {
-        position: absolute; inset: 0; z-index: 30;
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%);
-        transition: opacity 0.5s; cursor: pointer;
+    /* --- GESTION DU SLIDER (SWIPE) --- */
+    #slider-container {
+        display: flex; width: 300vw; height: 100vh;
+        transform: translateX(-100vw); /* Démarre sur l'écran central */
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        will-change: transform;
     }
-    body.standby-mode #idle-screen { background: #000000; } /* OLED Pur */
-    #idle-screen.hidden { opacity: 0; pointer-events: none; }
+    .screen { width: 100vw; height: 100vh; position: relative; display: flex; flex-direction: column; padding: 2vh 2vw; }
 
-    .idle-time { font-weight: 500; line-height: 1; color: var(--idle-color); transition: all 0.5s ease; text-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-    /* Tailles de l'horloge en veille */
-    .idle-time.size-small { font-size: 80px; }
-    .idle-time.size-medium { font-size: 140px; }
-    .idle-time.size-large { font-size: 220px; font-weight: 700; letter-spacing: -5px; }
-    /* Mode iPhone Standby (Rouge) */
-    body.standby-mode .idle-time { color: #ff3b30; text-shadow: none; }
+    /* --- ÉCRAN GAUCHE (APPS) --- */
+    #screen-apps { justify-content: center; align-items: center; }
+    .app-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 80%; max-width: 600px; }
+    .app-icon { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; text-align: center; backdrop-filter: blur(20px); font-size: 24px; font-weight: bold; }
+    .app-icon svg { width: 48px; height: 48px; fill: var(--text-main); margin-bottom: 10px; }
 
-    .idle-weather { font-size: 32px; font-weight: 500; color: var(--idle-color); display: flex; align-items: center; gap: 10px; margin-top: 20px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-    body.standby-mode .idle-weather { color: #ff3b30; text-shadow: none; }
+    /* --- ÉCRAN DROIT (CALENDRIER) --- */
+    #screen-calendar { justify-content: center; align-items: center; }
+    .calendar-widget { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 30px; padding: 40px; width: 80%; max-width: 700px; backdrop-filter: blur(20px); text-align: center; }
+    .cal-title { font-size: 32px; font-weight: bold; margin-bottom: 20px; color: var(--accent); }
 
-    /* --- TABLEAU DE BORD (ACTIF) --- */
-    #dashboard {
-        position: absolute; inset: 0; z-index: 20;
-        padding: 30px 40px; display: grid;
-        grid-template-columns: 1.2fr 1fr 1fr; grid-template-rows: auto 1fr;
-        gap: 20px; opacity: 0; pointer-events: none;
-        transition: opacity 0.5s, transform 0.5s; transform: scale(0.95);
+    /* --- ÉCRAN CENTRAL (MAIN) --- */
+    #screen-main { flex-direction: row; justify-content: space-between; padding-bottom: 80px; /* Espace pour le lecteur bas */ gap: 2vw; }
+
+    /* Conteneur News (Gauche) */
+    .news-container {
+        flex: 0.8; height: 100%; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border); border-radius: 30px;
+        display: flex; flex-direction: column; overflow: hidden;
     }
-    #dashboard.active { opacity: 1; pointer-events: auto; transform: scale(1); }
-    #dashboard.active ~ .background { filter: blur(25px) brightness(0.6); }
-
-    header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; }
-    .header-nav { display: flex; gap: 20px; font-size: 18px; font-weight: 500; color: var(--text-secondary); }
-    .header-nav span.active { color: var(--text-primary); border-bottom: 3px solid var(--accent); padding-bottom: 5px; }
-
-    /* Cartes */
-    .card {
-        background: var(--card-bg); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
-        border: 1px solid var(--card-border); border-radius: 28px;
-        padding: 24px; display: flex; flex-direction: column;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: background 0.5s;
-    }
+    .news-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--glass-border); }
+    .news-header h3 { font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    .btn-menu { background: transparent; border: none; cursor: pointer; display: flex; padding: 5px; }
+    .btn-menu svg { width: 24px; height: 24px; fill: var(--text-main); }
     
-    /* Media (Priorité Radio) */
-    .media-card { grid-row: span 2; justify-content: space-between; background: linear-gradient(135deg, var(--card-bg), rgba(0,0,0,0.3)); }
-    .media-art { width: 100%; height: 200px; border-radius: 16px; background: url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600') center/cover; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .media-info h3 { font-size: 24px; margin-bottom: 5px; }
-    .media-info p { color: var(--accent); font-weight: 500; }
-    .controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: auto; }
+    .news-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding: 15px; }
+    .news-item { display: flex; gap: 12px; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 16px; }
+    .news-img { width: 80px; height: 60px; border-radius: 10px; background-size: cover; background-position: center; flex-shrink: 0; }
+    .news-text { font-size: 14px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Conteneur Horloge (Droite) */
+    .clock-container { flex: 1.2; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; text-align: right; padding-right: 2vw; }
+    .main-time { font-size: 14vh; font-weight: 400; line-height: 1; letter-spacing: -2px; }
+    .main-date { font-size: 4vh; color: var(--text-dim); margin-top: 5px; font-weight: 500; }
+    .main-weather { display: flex; align-items: center; gap: 10px; font-size: 5vh; margin-top: 15px; }
+    .main-weather svg { width: 6vh; height: 6vh; fill: var(--text-main); }
+    .btn-settings { margin-top: 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; padding: 15px; cursor: pointer; }
+    .btn-settings svg { width: 24px; height: 24px; fill: var(--text-main); }
+
+    /* --- LECTEUR RADIO & RSS (BAS) --- */
+    .bottom-player { position: absolute; bottom: 0; left: 0; right: 0; height: 75px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 50; }
     
-    .btn-icon { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 15px; border-radius: 50%; transition: background 0.2s; z-index: 50; }
-    .btn-icon:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
-    .btn-icon svg { width: 32px; height: 32px; fill: var(--icon-color); pointer-events: none; }
-    .btn-play { background: var(--text-primary); width: 70px; height: 70px; }
-    .btn-play svg { fill: var(--card-bg); width: 36px; height: 36px; }
+    .radio-info { display: flex; align-items: center; gap: 15px; flex: 1; }
+    .radio-logo { width: 45px; height: 45px; border-radius: 50%; background-color: #fff; background-size: cover; background-position: center; border: 2px solid var(--glass-border); }
+    .radio-text h4 { font-size: 16px; margin: 0; }
+    .radio-text p { font-size: 12px; color: var(--text-dim); margin: 0; }
 
-    /* Liste Radios */
-    .info-card h4 { font-size: 18px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-    .info-card h4 svg { width: 20px; height: 20px; fill: var(--text-secondary); pointer-events: none; }
-    .radio-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1; }
-    .radio-item { display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.2); cursor: pointer; transition: background 0.2s; }
-    .radio-item:active { background: rgba(255,255,255,0.1); transform: scale(0.98); }
-    .theme-light-glass .radio-item { background: rgba(255,255,255,0.4); }
+    .radio-controls { display: flex; align-items: center; gap: 20px; flex: 1; justify-content: center; }
+    .ctrl-btn { background: transparent; border: 1px solid var(--glass-border); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .ctrl-btn svg { width: 20px; height: 20px; fill: var(--text-main); }
+    .ctrl-play { background: #fff; border: none; width: 55px; height: 55px; }
+    .ctrl-play svg { fill: #000; width: 24px; height: 24px; }
 
-    /* Météo (Clique pour Paramètres) */
-    .weather-card { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-    .weather-card:active { transform: scale(0.98); }
-    .w-temp { font-size: 64px; font-weight: 400; }
-    .w-icon svg { width: 80px; height: 80px; fill: var(--icon-color); pointer-events: none; }
+    .radio-menu { flex: 1; display: flex; justify-content: flex-end; }
 
-    /* --- PARAMETRES --- */
-    #settings-panel { 
-        position: absolute; bottom: 30px; right: 40px; display: none; 
-        background: var(--card-bg); padding: 25px; border-radius: 20px; 
-        backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-        border: 1px solid var(--card-border); z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
-    #settings-panel.show { display: flex; flex-direction: column; gap: 12px; }
-    .settings-group { display: flex; flex-direction: column; gap: 5px; }
-    .settings-group label { font-size: 14px; color: var(--text-secondary); font-weight: bold; }
-    select, input { padding: 10px; border-radius: 8px; border: none; background: rgba(255,255,255,0.15); color: var(--text-primary); outline: none; font-family: var(--font); font-size: 16px; cursor: pointer; }
-    select option { background: #333; color: #fff; }
+    .rss-ticker { position: absolute; bottom: 75px; left: 0; right: 0; height: 25px; background: var(--accent); color: #000; font-size: 13px; font-weight: bold; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+    .ticker-content { display: inline-block; padding-left: 100%; animation: ticker 25s linear infinite; }
+    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+    /* --- MENUS & MODALES --- */
+    .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 25px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+    .close-modal { align-self: flex-end; background: transparent; border: none; font-size: 24px; color: #fff; cursor: pointer; margin-bottom: 10px; }
+    
+    /* Styles spécifiques Paramètres */
+    .setting-group { margin-bottom: 20px; }
+    .setting-group label { display: block; font-size: 14px; font-weight: bold; color: var(--accent); margin-bottom: 10px; }
+    .select-input, .text-input { width: 100%; padding: 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: #fff; font-family: var(--font); font-size: 16px; outline: none; }
+    
+    /* Thumbnails de thèmes */
+    .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .theme-thumb { border: 2px solid transparent; border-radius: 12px; overflow: hidden; cursor: pointer; text-align: center; }
+    .theme-thumb.active { border-color: var(--accent); }
+    .theme-thumb img { width: 100%; height: 80px; object-fit: cover; display: block; }
+    .theme-thumb span { display: block; font-size: 12px; padding: 5px; background: rgba(0,0,0,0.5); }
 
 </style>
 </head>
-<body class="dark-glass" id="app-body">
+<body>
 
-    <!-- Fond d'écran dynamique -->
     <div class="background" id="bg-img"></div>
 
-    <!-- ECRAN DE VEILLE (Clique pour réveiller) -->
-    <div id="idle-screen" onclick="wakeUp()">
-        <div class="idle-time size-medium" id="idle-clock">10:13</div>
-        <div class="idle-weather">
-            <svg style="width:40px;height:40px;fill:currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
-            <span id="idle-temp">24°</span>
+    <!-- Ticker RSS (Au-dessus du lecteur) -->
+    <div class="rss-ticker">
+        <div class="ticker-content" id="ticker-text">🔥 EN DIRECT : Les dernières actualités technologiques • Nouvelles avancées dans le streaming audio HTML5 • La météo annonce un grand soleil sur la capitale...</div>
+    </div>
+
+    <!-- Lecteur Radio (Fixé au bas) -->
+    <div class="bottom-player">
+        <div class="radio-info">
+            <div class="radio-logo" id="radio-logo" style="background-image: url('https://upload.wikimedia.org/wikipedia/fr/thumb/a/a2/France_Info_logo_2021.svg/1200px-France_Info_logo_2021.svg.png');"></div>
+            <div class="radio-text">
+                <h4 id="radio-title">France Info</h4>
+                <p>Info en direct</p>
+            </div>
+        </div>
+        <div class="radio-controls">
+            <button class="ctrl-btn" onclick="prevRadio()"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+            <button class="ctrl-btn ctrl-play" id="play-btn" onclick="toggleRadio()">
+                <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <button class="ctrl-btn" onclick="nextRadio()"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+        </div>
+        <div class="radio-menu">
+            <button class="btn-menu" onclick="openModal('modal-radios')">
+                <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+        </div>
+        <audio id="audio-player" preload="none"></audio>
+    </div>
+
+    <!-- CONTENEUR DES 3 ÉCRANS -->
+    <div id="slider-container">
+        
+        <!-- ECRAN 0 : APPS (Gauche) -->
+        <div class="screen" id="screen-apps">
+            <div class="app-grid">
+                <div class="app-icon"><svg viewBox="0 0 24 24"><path d="M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM12.5 8H11v6l4.75 2.85.75-1.23-4-2.37V8zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg><br>Alarme</div>
+                <div class="app-icon"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg><br>Notes</div>
+                <div class="app-icon"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg><br>Agenda</div>
+                <div class="app-icon"><svg viewBox="0 0 24 24"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg><br>Aide</div>
+            </div>
+        </div>
+
+        <!-- ECRAN 1 : MAIN (Centre) -->
+        <div class="screen" id="screen-main">
+            <!-- News (Gauche) -->
+            <div class="news-container">
+                <div class="news-header">
+                    <h3><svg viewBox="0 0 24 24" width="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Info en Live</h3>
+                    <button class="btn-menu" onclick="openModal('modal-rss')"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+                </div>
+                <div class="news-list" id="news-list">
+                    <!-- Généré par JS -->
+                </div>
+            </div>
+
+            <!-- Horloge & Météo (Droite) -->
+            <div class="clock-container" id="clock-wrapper">
+                <div class="main-time" id="main-time">00:00</div>
+                <div class="main-date" id="main-date">Lundi 1 Janvier</div>
+                <div class="main-weather">
+                    <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+                    <span id="main-temp">24°C</span>
+                </div>
+                <button class="btn-settings" onclick="openModal('modal-settings')">
+                    <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ECRAN 2 : CALENDRIER (Droite) -->
+        <div class="screen" id="screen-calendar">
+            <div class="calendar-widget">
+                <div class="cal-title" id="cal-title">Juillet 2026</div>
+                <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; font-size:20px;">
+                    <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+                    <!-- Jours générés en JS pour l'exemple -->
+                    <div style="opacity:0.3">29</div><div style="opacity:0.3">30</div>
+                    <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div>
+                    <div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div>
+                    <div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div><div>19</div>
+                    <div style="background:var(--accent); color:#000; border-radius:50%; width:30px; height:30px; margin:auto; display:flex; align-items:center; justify-content:center;">20</div>
+                    <div>21</div><div>22</div><div>23</div><div>24</div><div>25</div><div>26</div>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- Fin Slider -->
+
+    <!-- ================= MODALES ================= -->
+
+    <!-- Modale Paramètres -->
+    <div class="modal" id="modal-settings">
+        <button class="close-modal" onclick="closeModals()">✕</button>
+        <div class="modal-content">
+            <div class="setting-group">
+                <label>Géolocalisation & Météo</label>
+                <input type="text" class="text-input" id="set-city" value="Paris">
+                <select class="select-input" style="margin-top:10px;" id="set-unit">
+                    <option value="C">Celsius (°C)</option>
+                    <option value="F">Fahrenheit (°F)</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
+                <label>Position de l'Horloge</label>
+                <select class="select-input" onchange="setClockAlign(this.value)">
+                    <option value="flex-end">Droite</option>
+                    <option value="center">Centre</option>
+                    <option value="flex-start">Gauche</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>Thèmes Mode Veille (Horloge)</label>
+                <!-- Thumbnails visuels au lieu de boutons preview -->
+                <div class="theme-grid">
+                    <div class="theme-thumb active" onclick="selectTheme(this)">
+                        <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=300" alt="Paysages">
+                        <span>Nature Automatique</span>
+                    </div>
+                    <div class="theme-thumb" onclick="selectTheme(this)">
+                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300" alt="Abstrait">
+                        <span>Verre Abstrait</span>
+                    </div>
+                    <div class="theme-thumb" onclick="selectTheme(this)">
+                        <div style="height:80px; background:#000; display:flex; align-items:center; justify-content:center; color:#ff3b30; font-size:24px; font-weight:bold;">10:13</div>
+                        <span>OLED (Rouge)</span>
+                    </div>
+                </div>
+            </div>
+            <button class="select-input" style="background:var(--accent); color:#000; font-weight:bold; cursor:pointer;" onclick="closeModals()">Enregistrer</button>
         </div>
     </div>
 
-    <!-- TABLEAU DE BORD ACTIF (Clique pour maintenir éveillé) -->
-    <div id="dashboard" onclick="keepAwake()">
-        <header>
-            <div class="header-nav">
-                <span class="active">Radio & Médias</span>
-                <span>Maison</span>
-            </div>
-            <div class="header-nav"><span id="dash-clock">10:13</span></div>
-        </header>
-
-        <!-- Lecteur Principal -->
-        <div class="card media-card">
-            <div class="media-art" id="album-art"></div>
-            <div class="media-info">
-                <h3 id="media-title">France Info</h3>
-                <p id="media-source">Actualités en direct</p>
-            </div>
-            <div class="controls">
-                <!-- Boutons avec appels directs aux fonctions pour le tactile -->
-                <button class="btn-icon" onclick="prevStation()">
-                    <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-                </button>
-                <button class="btn-icon btn-play" id="play-btn" onclick="togglePlay()">
-                    <svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
-                </button>
-                <button class="btn-icon" onclick="nextStation()">
-                    <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-                </button>
-            </div>
-            <!-- Lecteur Audio HTML5 caché -->
-            <audio id="audio-player" preload="none"></audio>
-        </div>
-
-        <!-- Météo (Bouton Paramètres) -->
-        <div class="card weather-card" onclick="toggleSettings()">
-            <div>
-                <div class="w-temp" id="dash-temp">24°</div>
-                <div style="color:var(--text-secondary); margin-top:5px;" id="dash-city">Paris (Réglages)</div>
-            </div>
-            <div class="w-icon">
-                <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
-            </div>
-        </div>
-
-        <!-- Date -->
-        <div class="card info-card" style="justify-content:center; align-items:center; text-align:center;">
-            <div style="font-size:32px; font-weight:500;" id="dash-date-day">Lundi 20</div>
-            <div style="color:var(--text-secondary); font-size: 18px; margin-top:5px;" id="dash-date-month">Juillet 2026</div>
-        </div>
-
-        <!-- Liste des Radios -->
-        <div class="card info-card" style="grid-column: span 2;">
-            <h4>
-                <svg viewBox="0 0 24 24"><path d="M12 20c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m0-18C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 5h2v6h-2zm0 8h2v2h-2z"/></svg>
-                Radios Locales & Infos
-            </h4>
-            <div class="radio-list" id="radio-list">
-                <!-- Généré par JavaScript -->
-            </div>
+    <!-- Modale Choix RSS -->
+    <div class="modal" id="modal-rss">
+        <button class="close-modal" onclick="closeModals()">✕</button>
+        <div class="modal-content">
+            <h3 style="margin-bottom:15px;">Sources d'Information</h3>
+            <select class="select-input" onchange="loadNews(this.value)">
+                <option value="general">Le Monde / Le Figaro (Général)</option>
+                <option value="tech">Technologie (01net, Frandroid)</option>
+                <option value="sport">Sport (L'Équipe)</option>
+                <option value="auto">Automobile (AutoPlus)</option>
+                <option value="mode">Mode & Lifestyle</option>
+            </select>
+            <button class="select-input" style="background:var(--accent); color:#000; font-weight:bold; cursor:pointer; margin-top:20px;" onclick="closeModals()">Valider</button>
         </div>
     </div>
 
-    <!-- PANNEAU DES PARAMETRES -->
-    <div id="settings-panel">
-        <div class="settings-group">
-            <label>Interface & Couleurs</label>
-            <select onchange="changeTheme(this.value)">
-                <option value="dark-glass">Sombre (Dark Glass)</option>
-                <option value="light-glass">Clair (Light Glass)</option>
-                <option value="blue-glass">Bleu Nuit</option>
-            </select>
+    <!-- Modale Radios du Pays -->
+    <div class="modal" id="modal-radios">
+        <button class="close-modal" onclick="closeModals()">✕</button>
+        <div class="modal-content">
+            <h3 style="margin-bottom:15px;">Radios (France)</h3>
+            <div id="radio-list-modal" style="display:flex; flex-direction:column; gap:10px;">
+                <!-- Rempli par JS -->
+            </div>
         </div>
-
-        <div class="settings-group">
-            <label>Mode Veille (Fond)</label>
-            <select id="idle-bg-select" onchange="changeIdleMode(this.value)">
-                <option value="wallpaper">Paysages Automatiques</option>
-                <option value="standby">iPhone StandBy (Noir OLED pur)</option>
-            </select>
-        </div>
-
-        <div class="settings-group">
-            <label>Taille Horloge (Veille)</label>
-            <select onchange="changeClockSize(this.value)">
-                <option value="size-medium">Moyenne</option>
-                <option value="size-small">Petite</option>
-                <option value="size-large">Grande</option>
-            </select>
-        </div>
-
-        <button onclick="toggleSettings()" style="margin-top:15px; padding:12px; border-radius:8px; border:none; background:var(--accent); color:#000; font-weight:bold; font-size:16px; cursor:pointer;">Valider & Fermer</button>
     </div>
 
 <script>
     // --- 1. HORLOGE ---
     function updateClock() {
         const d = new Date();
-        const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('idle-clock').textContent = time;
-        document.getElementById('dash-clock').textContent = time;
-        
-        document.getElementById('dash-date-day').textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' });
-        document.getElementById('dash-date-month').textContent = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        document.getElementById('main-time').textContent = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('main-date').textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     }
     setInterval(updateClock, 1000); updateClock();
 
-    // --- 2. GESTION DU REVEIL ET DU TACTILE ---
-    let idleTimeout;
-    const idleScreen = document.getElementById('idle-screen');
-    const dashboard = document.getElementById('dashboard');
+    // --- 2. GESTION DU SWIPE TACTILE ---
+    let currentScreen = 1; // 0=Apps, 1=Main, 2=Calendar
+    let startX = 0;
+    const slider = document.getElementById('slider-container');
 
-    function wakeUp() {
-        idleScreen.classList.add('hidden');
-        dashboard.classList.add('active');
-        keepAwake(); // Lancer le chrono
+    document.addEventListener('touchstart', e => {
+        // Ignorer le swipe si on scroll dans les listes (news ou modales)
+        if(e.target.closest('.news-list') || e.target.closest('.modal-content')) return;
+        startX = e.changedTouches[0].screenX;
+    });
+
+    document.addEventListener('touchend', e => {
+        if(e.target.closest('.news-list') || e.target.closest('.modal-content')) return;
+        let endX = e.changedTouches[0].screenX;
+        let diffX = startX - endX;
+
+        if (diffX > 60) { // Swipe à gauche -> Ecran suivant (Droite)
+            if (currentScreen < 2) currentScreen++;
+        } else if (diffX < -60) { // Swipe à droite -> Ecran précédent (Gauche)
+            if (currentScreen > 0) currentScreen--;
+        }
+        updateSlider();
+    });
+
+    function updateSlider() {
+        slider.style.transform = `translateX(-${currentScreen * 100}vw)`;
     }
 
-    function goToSleep() {
-        dashboard.classList.remove('active');
-        idleScreen.classList.remove('hidden');
-        document.getElementById('settings-panel').classList.remove('show');
-    }
-
-    function keepAwake() {
-        clearTimeout(idleTimeout);
-        idleTimeout = setTimeout(goToSleep, 45000); // Retour en veille après 45s
-    }
-    window.onload = keepAwake;
-
-    // --- 3. LECTEUR RADIO (Fix pour le tactile) ---
-    // Flux HTTPS fiables pour éviter les blocages du navigateur
+    // --- 3. LECTEUR RADIO ---
     const stations = [
-        { name: "France Info", source: "Info en continu", url: "https://icecast.radio-france.fr/franceinfo-midfi.mp3", img: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?q=80&w=600" },
-        { name: "RFI Monde", source: "Info Internationale", url: "https://rfimondevn.ice.infomaniak.ch/rfimondevn-96k.mp3", img: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=600" },
-        { name: "FIP", source: "Musique Éclectique", url: "https://icecast.radio-france.fr/fip-midfi.mp3", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600" },
-        { name: "Chérie FM Relax", source: "Musique Douce", url: "https://scdn.nrj.net/audio1/fr/30201/mp3_128.mp3", img: "https://images.unsplash.com/photo-1493225457124-a1a2a53605ec?q=80&w=600" }
+        { name: "France Info", logo: "https://upload.wikimedia.org/wikipedia/fr/thumb/a/a2/France_Info_logo_2021.svg/1200px-France_Info_logo_2021.svg.png", url: "https://icecast.radio-france.fr/franceinfo-midfi.mp3" },
+        { name: "RTL", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/RTL_logo_2017.svg/1200px-RTL_logo_2017.svg.png", url: "http://icecast.rtl.fr/rtl-1-44-128?listen=webCwsBCggNCQgLDQUGBAcGBg" },
+        { name: "FIP", logo: "https://upload.wikimedia.org/wikipedia/fr/thumb/d/d5/Fip_logo_2021.svg/1200px-Fip_logo_2021.svg.png", url: "https://icecast.radio-france.fr/fip-midfi.mp3" }
     ];
-    let currentStation = 0;
+    let currentRadio = 0;
     const audio = document.getElementById('audio-player');
     const playIcon = document.getElementById('play-icon');
 
-    function renderRadios() {
-        const list = document.getElementById('radio-list');
-        list.innerHTML = stations.map((s, i) => `
-            <div class="radio-item" onclick="loadStation(${i}); forcePlay(); keepAwake();">
-                <div style="width:45px;height:45px;border-radius:10px;background:url('${s.img}') center/cover;"></div>
-                <div>
-                    <div style="font-weight:bold; font-size:16px;">${s.name}</div>
-                    <div style="font-size:13px;color:var(--text-secondary);">${s.source}</div>
-                </div>
+    function loadRadio(index) {
+        currentRadio = index;
+        document.getElementById('radio-title').textContent = stations[index].name;
+        document.getElementById('radio-logo').style.backgroundImage = `url('${stations[index].logo}')`;
+        audio.src = stations[index].url;
+    }
+
+    function toggleRadio() {
+        if (audio.paused) { audio.play(); playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`; } 
+        else { audio.pause(); playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`; }
+    }
+    
+    function nextRadio() { loadRadio((currentRadio + 1) % stations.length); toggleRadio(); }
+    function prevRadio() { loadRadio((currentRadio - 1 + stations.length) % stations.length); toggleRadio(); }
+
+    // Remplir la modale des radios
+    const radioListHTML = stations.map((s, i) => `
+        <div style="display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; cursor:pointer;" onclick="loadRadio(${i}); toggleRadio(); closeModals();">
+            <div style="width:40px; height:40px; background:url('${s.logo}') center/contain no-repeat; background-color:#fff; border-radius:50%;"></div>
+            <div style="font-weight:bold;">${s.name}</div>
+        </div>
+    `).join('');
+    document.getElementById('radio-list-modal').innerHTML = radioListHTML;
+    loadRadio(0);
+
+    // --- 4. NEWS & PHOTOS LIVE ---
+    function loadNews(category) {
+        // Simulation d'un flux RSS avec images
+        const newsData = [
+            { title: "Déploiement du nouveau réseau fibre optique national", img: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=150" },
+            { title: "Les dernières innovations en matière de streaming audio Web", img: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=150" },
+            { title: "Résultats sportifs de la nuit : un match historique", img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=150" },
+            { title: "Marché automobile : L'électrique gagne du terrain", img: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=150" },
+            { title: "Découverte scientifique majeure publiée ce matin", img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=150" }
+        ];
+
+        document.getElementById('news-list').innerHTML = newsData.map(n => `
+            <div class="news-item">
+                <div class="news-img" style="background-image:url('${n.img}')"></div>
+                <div class="news-text">${n.title}</div>
             </div>
         `).join('');
     }
-    renderRadios();
+    loadNews('general');
 
-    function loadStation(index) {
-        currentStation = index;
-        const s = stations[index];
-        audio.src = s.url;
-        document.getElementById('media-title').textContent = s.name;
-        document.getElementById('media-source').textContent = s.source;
-        document.getElementById('album-art').style.backgroundImage = `url('${s.img}')`;
-    }
-    loadStation(0);
-
-    function togglePlay() {
-        if (audio.paused) {
-            audio.play();
-            setPauseIcon();
-        } else {
-            audio.pause();
-            setPlayIcon();
-        }
-        keepAwake();
+    // --- 5. MODALES ET REGLAGES ---
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
+    
+    function setClockAlign(align) {
+        document.getElementById('clock-wrapper').style.alignItems = align;
+        // Adapter le texte
+        document.getElementById('clock-wrapper').style.textAlign = align === 'flex-start' ? 'left' : (align === 'center' ? 'center' : 'right');
     }
 
-    function forcePlay() {
-        audio.play().then(() => setPauseIcon()).catch(e => console.log("Cliquer pour jouer"));
+    function selectTheme(element) {
+        document.querySelectorAll('.theme-thumb').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+        // Logique d'application du thème de fond ici si besoin
     }
-
-    function setPlayIcon() { playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`; }
-    function setPauseIcon() { playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`; }
-
-    function nextStation() { loadStation((currentStation + 1) % stations.length); forcePlay(); keepAwake(); }
-    function prevStation() { loadStation((currentStation - 1 + stations.length) % stations.length); forcePlay(); keepAwake(); }
-
-    // --- 4. PARAMETRES ET THEMES ---
-    function toggleSettings() {
-        document.getElementById('settings-panel').classList.toggle('show');
-        keepAwake();
-    }
-
-    function changeTheme(themeName) {
-        document.body.className = themeName;
-        // Conserver le mode standby s'il était actif
-        if(document.getElementById('idle-bg-select').value === "standby") {
-            document.body.classList.add('standby-mode');
-        }
-    }
-
-    function changeClockSize(sizeClass) {
-        const clock = document.getElementById('idle-clock');
-        clock.className = `idle-time ${sizeClass}`;
-    }
-
-    let wallpaperInterval;
-    function changeIdleMode(mode) {
-        if (mode === "standby") {
-            // Mode iPhone : Fond noir OLED, Texte Rouge
-            document.body.classList.add('standby-mode');
-            clearInterval(wallpaperInterval);
-        } else {
-            // Mode Paysage : Image Unsplash qui tourne
-            document.body.classList.remove('standby-mode');
-            startWallpapers();
-        }
-    }
-
-    function startWallpapers() {
-        clearInterval(wallpaperInterval);
-        wallpaperInterval = setInterval(() => {
-            // Rajoute un timestamp pour forcer le rechargement d'une nouvelle image aléatoire
-            const timestamp = new Date().getTime();
-            document.getElementById('bg-img').style.backgroundImage = `url('https://source.unsplash.com/1920x1080/?landscape,nature&sig=${timestamp}')`;
-        }, 60000); // Change toutes les minutes
-    }
-    // Démarrer le carrousel de fonds d'écran au chargement
-    startWallpapers();
 
 </script>
 </body>
