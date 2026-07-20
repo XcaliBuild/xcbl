@@ -1,1 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Smart Hub OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --font: 'Google Sans', sans-serif;
+        --bg-img: url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=2070');
+        /* Thème par défaut : Dark Glass */
+        --card-bg: rgba(30, 30, 30, 0.6);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --icon-color: #ffffff;
+        --blur: 25px;
+        --accent: #a8c7fa;
+    }
+
+    /* Thèmes dynamiques */
+    body.light-glass {
+        --card-bg: rgba(255, 255, 255, 0.7);
+        --card-border: rgba(0, 0, 0, 0.1);
+        --text-primary: #202124;
+        --text-secondary: #5f6368;
+        --icon-color: #202124;
+        --accent: #0b57d0;
+    }
+    body.blue-glass { --card-bg: rgba(10, 40, 80, 0.6); --accent: #8ab4f8; }
+    body.green-glass { --card-bg: rgba(10, 60, 30, 0.6); --accent: #81c995; }
+    body.pink-glass { --card-bg: rgba(80, 20, 50, 0.6); --accent: #f48fb1; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body { font-family: var(--font); color: var(--text-primary); overflow: hidden; background: #000; height: 100vh; width: 100vw; transition: color 0.5s; }
+
+    /* Arrière-plan global */
+    .background {
+        position: absolute; inset: 0; z-index: -2;
+        background-image: var(--bg-img);
+        background-size: cover; background-position: center;
+        transition: filter 0.8s ease;
+    }
+
+    /* Mode Veille (Photo pleine page) */
+    #idle-screen {
+        position: absolute; inset: 0; z-index: 10;
+        display: flex; flex-direction: column; justify-content: flex-end; padding: 40px;
+        background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 40%);
+        transition: opacity 0.5s;
+    }
+    #idle-screen.hidden { opacity: 0; pointer-events: none; }
+    .idle-time { font-size: 120px; font-weight: 400; line-height: 1; text-shadow: 0 4px 12px rgba(0,0,0,0.3); color: #fff; }
+    .idle-weather { font-size: 32px; font-weight: 500; text-shadow: 0 2px 8px rgba(0,0,0,0.3); color: #fff; display: flex; align-items: center; gap: 10px; }
+
+    /* Tableau de bord (Mode Actif) */
+    #dashboard {
+        position: absolute; inset: 0; z-index: 20;
+        padding: 30px 40px; display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr; grid-template-rows: auto 1fr;
+        gap: 20px; opacity: 0; pointer-events: none;
+        transition: opacity 0.5s, transform 0.5s; transform: scale(0.95);
+    }
+    #dashboard.active { opacity: 1; pointer-events: auto; transform: scale(1); }
+    #dashboard.active ~ .background { filter: blur(20px) brightness(0.7); }
+
+    /* En-tête Dashboard */
+    header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; }
+    .header-nav { display: flex; gap: 20px; font-size: 18px; font-weight: 500; color: var(--text-secondary); }
+    .header-nav span.active { color: var(--text-primary); border-bottom: 3px solid var(--accent); padding-bottom: 5px; }
+
+    /* Cartes (Cards) */
+    .card {
+        background: var(--card-bg); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+        border: 1px solid var(--card-border); border-radius: 28px;
+        padding: 24px; display: flex; flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: background 0.5s;
+    }
+    
+    /* Carte Media (YouTube / Radio) */
+    .media-card { grid-row: span 2; display: flex; justify-content: space-between; background: linear-gradient(135deg, var(--card-bg), rgba(0,0,0,0.2)); }
+    .media-art { width: 100%; height: 200px; border-radius: 16px; background: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=600') center/cover; margin-bottom: 20px; }
+    .media-info h3 { font-size: 24px; margin-bottom: 5px; }
+    .media-info p { color: var(--accent); font-weight: 500; }
+    .controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: auto; }
+    .btn-icon { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 10px; border-radius: 50%; transition: background 0.2s; }
+    .btn-icon:hover { background: rgba(255,255,255,0.1); }
+    .btn-icon svg { width: 32px; height: 32px; fill: var(--icon-color); }
+    .btn-play { background: var(--text-primary); width: 64px; height: 64px; }
+    .btn-play svg { fill: var(--card-bg); width: 36px; height: 36px; }
+    .btn-play:hover { transform: scale(1.05); }
+
+    /* Carte Météo */
+    .weather-card { display: flex; align-items: center; justify-content: space-between; }
+    .w-temp { font-size: 64px; font-weight: 400; }
+    .w-icon svg { width: 80px; height: 80px; fill: var(--icon-color); }
+
+    /* Carte Infos / Liste */
+    .info-card h4 { font-size: 18px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    .info-card h4 svg { width: 20px; height: 20px; fill: var(--text-secondary); }
+    .radio-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    .radio-item { display: flex; align-items: center; gap: 15px; padding: 10px; border-radius: 12px; background: rgba(0,0,0,0.1); cursor: pointer; }
+    .theme-light-glass .radio-item { background: rgba(255,255,255,0.4); }
+
+    /* Feedback Vocal */
+    #voice-bar {
+        position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+        background: var(--card-bg); backdrop-filter: blur(20px);
+        border: 1px solid var(--card-border); border-radius: 30px;
+        padding: 10px 24px; display: flex; align-items: center; gap: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: top 0.4s ease; z-index: 100;
+    }
+    #voice-bar.listening { top: 30px; }
+    .mic-icon { width: 24px; height: 24px; fill: var(--accent); animation: pulse 1.5s infinite; }
+
+    /* Modale Vidéo YouTube */
+    #video-modal {
+        position: fixed; inset: 0; background: #000; z-index: 200;
+        display: none; flex-direction: column;
+    }
+    #video-modal.show { display: flex; }
+    #video-modal iframe { flex: 1; border: none; width: 100%; height: 100%; }
+    .close-video { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); border-radius: 50%; padding: 15px; cursor: pointer; z-index: 201; }
+    .close-video svg { fill: #fff; width: 30px; height: 30px; }
+
+    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+
+    /* Paramètres cachés au clic */
+    #settings-panel { position: absolute; bottom: 30px; right: 40px; display: none; background: var(--card-bg); padding: 20px; border-radius: 16px; backdrop-filter: blur(20px); border: 1px solid var(--card-border); z-index: 50; }
+    #settings-panel.show { display: flex; flex-direction: column; gap: 10px; }
+    select, input { padding: 8px 12px; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: var(--text-primary); outline: none; font-family: var(--font); }
+</style>
+</head>
+<body class="dark-glass" id="app-body">
+
+    <div class="background" id="bg-img"></div>
+
+    <!-- Barre de retour vocal -->
+    <div id="voice-bar">
+        <svg class="mic-icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        <span id="voice-text" style="font-weight:500;">En écoute...</span>
+    </div>
+
+    <!-- Mode Veille (Idle) -->
+    <div id="idle-screen" onclick="wakeUp()">
+        <div class="idle-time" id="idle-clock">10:13</div>
+        <div class="idle-weather">
+            <svg style="width:40px;height:40px;fill:#fff" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+            <span id="idle-temp">24°</span>
+        </div>
+    </div>
+
+    <!-- Tableau de bord (Actif) -->
+    <div id="dashboard" onclick="resetIdleTimer()">
+        <header>
+            <div class="header-nav">
+                <span class="active">Maison</span>
+                <span>Médias</span>
+                <span>Communication</span>
+            </div>
+            <div class="header-nav"><span id="dash-clock">10:13</span></div>
+        </header>
+
+        <!-- Lecteur Media -->
+        <div class="card media-card">
+            <div class="media-art" id="album-art"></div>
+            <div class="media-info">
+                <h3 id="media-title">Aucune lecture</h3>
+                <p id="media-source">Prêt</p>
+            </div>
+            <div class="controls">
+                <button class="btn-icon" onclick="prevStation()">
+                    <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                </button>
+                <button class="btn-icon btn-play" id="play-btn" onclick="togglePlay()">
+                    <svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <button class="btn-icon" onclick="nextStation()">
+                    <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
+            </div>
+            <audio id="audio-player"></audio>
+        </div>
+
+        <!-- Météo -->
+        <div class="card weather-card" onclick="toggleSettings()">
+            <div>
+                <div class="w-temp" id="dash-temp">24°C</div>
+                <div style="color:var(--text-secondary); margin-top:5px;" id="dash-city">Paris</div>
+            </div>
+            <div class="w-icon">
+                <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+            </div>
+        </div>
+
+        <!-- Calendrier -->
+        <div class="card info-card" style="justify-content:center; align-items:center; text-align:center;">
+            <svg style="width:48px;height:48px;fill:var(--accent);margin-bottom:10px;" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+            <div style="font-size:28px; font-weight:500;" id="dash-date-day">Lundi 20</div>
+            <div style="color:var(--text-secondary);" id="dash-date-month">Juillet 2026</div>
+        </div>
+
+        <!-- Radios / Infos Locales -->
+        <div class="card info-card" style="grid-column: span 2;">
+            <h4>
+                <svg viewBox="0 0 24 24"><path d="M12 20c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m0-18C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 5h2v6h-2zm0 8h2v2h-2z"/></svg>
+                Infos & Radios (Zone Europe/FR)
+            </h4>
+            <div class="radio-list" id="radio-list">
+                <!-- Généré par JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Vidéo YouTube -->
+    <div id="video-modal">
+        <div class="close-video" onclick="closeVideo()">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </div>
+        <iframe id="yt-iframe" allow="autoplay; fullscreen"></iframe>
+    </div>
+
+    <!-- Panneau Paramètres Rapides -->
+    <div id="settings-panel">
+        <label>Thème Visuel</label>
+        <select onchange="changeTheme(this.value)">
+            <option value="dark-glass">Sombre (Dark Glass)</option>
+            <option value="light-glass">Clair (Light Glass)</option>
+            <option value="blue-glass">Bleu Océan</option>
+            <option value="green-glass">Vert Nature</option>
+            <option value="pink-glass">Rose Doux</option>
+        </select>
+        <label>Mot clé d'activation</label>
+        <input type="text" id="wake-word" value="système">
+        <button onclick="toggleSettings()" style="margin-top:10px; padding:8px; border-radius:8px; border:none; background:var(--accent); color:#fff; font-weight:bold;">Fermer</button>
+    </div>
+
+<script>
+    // --- 1. HORLOGE & METEO SIMULEE ---
+    function updateClock() {
+        const d = new Date();
+        const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('idle-clock').textContent = time;
+        document.getElementById('dash-clock').textContent = time;
+        
+        document.getElementById('dash-date-day').textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' });
+        document.getElementById('dash-date-month').textContent = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // --- 2. GESTION DES MODES (Veille / Actif) ---
+    let idleTimeout;
+    const idleScreen = document.getElementById('idle-screen');
+    const dashboard = document.getElementById('dashboard');
+
+    function wakeUp() {
+        idleScreen.classList.add('hidden');
+        dashboard.classList.add('active');
+        resetIdleTimer();
+    }
+
+    function goToSleep() {
+        dashboard.classList.remove('active');
+        idleScreen.classList.remove('hidden');
+    }
+
+    function resetIdleTimer() {
+        clearTimeout(idleTimeout);
+        idleTimeout = setTimeout(goToSleep, 30000); // Retour en veille après 30s d'inactivité
+    }
+    window.onload = resetIdleTimer;
+
+    // --- 3. LECTEUR AUDIO & RADIOS INFO ---
+    const stations = [
+        { name: "France Info", source: "Actualités Live", url: "https://icecast.radio-france.fr/franceinfo-midfi.mp3", img: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?q=80&w=600" },
+        { name: "RFI Monde", source: "Info Internationale", url: "https://rfimondevn.ice.infomaniak.ch/rfimondevn-96k.mp3", img: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=600" },
+        { name: "FIP", source: "Musique", url: "https://icecast.radio-france.fr/fip-midfi.mp3", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600" }
+    ];
+    let currentStation = 0;
+    const audio = document.getElementById('audio-player');
+    const playIcon = document.getElementById('play-icon');
+
+    function renderRadios() {
+        const list = document.getElementById('radio-list');
+        list.innerHTML = stations.map((s, i) => `
+            <div class="radio-item" onclick="loadStation(${i}); togglePlay(true);">
+                <div style="width:40px;height:40px;border-radius:8px;background:url('${s.img}') center/cover;"></div>
+                <div>
+                    <div style="font-weight:bold;">${s.name}</div>
+                    <div style="font-size:12px;color:var(--text-secondary);">${s.source}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    renderRadios();
+
+    function loadStation(index) {
+        currentStation = index;
+        const s = stations[index];
+        audio.src = s.url;
+        document.getElementById('media-title').textContent = s.name;
+        document.getElementById('media-source').textContent = s.source;
+        document.getElementById('album-art').style.backgroundImage = `url('${s.img}')`;
+    }
+    loadStation(0);
+
+    function togglePlay(forcePlay = false) {
+        if (audio.paused || forcePlay) {
+            audio.play();
+            // Icône Pause SVG
+            playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+        } else {
+            audio.pause();
+            // Icône Play SVG
+            playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+        }
+    }
+    function nextStation() { loadStation((currentStation + 1) % stations.length); togglePlay(true); }
+    function prevStation() { loadStation((currentStation - 1 + stations.length) % stations.length); togglePlay(true); }
+
+    // --- 4. YOUTUBE VIDEO MODAL ---
+    function openVideo(query) {
+        wakeUp(); // S'assurer que l'écran est allumé
+        audio.pause(); // Couper la radio
+        playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+        
+        const modal = document.getElementById('video-modal');
+        const iframe = document.getElementById('yt-iframe');
+        // Astuce iframe HTML : Recherche youtube intégrée (autoplay activé)
+        iframe.src = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=1`;
+        modal.classList.add('show');
+    }
+
+    function closeVideo() {
+        document.getElementById('video-modal').classList.remove('show');
+        document.getElementById('yt-iframe').src = '';
+    }
+
+    // --- 5. COMMANDE VOCALE (Toujours à l'écoute) ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const voiceBar = document.getElementById('voice-bar');
+    const voiceText = document.getElementById('voice-text');
+    let recognition;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'fr-FR';
+
+        recognition.onstart = () => console.log("Micro activé");
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+            const wakeWord = document.getElementById('wake-word').value.toLowerCase();
+            
+            console.log("Entendu:", transcript);
+
+            if (transcript.includes(wakeWord)) {
+                wakeUp();
+                voiceBar.classList.add('listening');
+                voiceText.textContent = transcript;
+
+                // --- LOGIQUE DES COMMANDES ---
+                if (transcript.includes('vidéo') || transcript.includes('youtube')) {
+                    // Extraire le terme de recherche après le mot clé
+                    let search = transcript.replace(wakeWord, '').replace('vidéo', '').replace('youtube', '').replace('cherche', '').trim();
+                    if(search === "") search = "actualités"; // fallback
+                    voiceText.textContent = "Recherche vidéo : " + search;
+                    setTimeout(() => openVideo(search), 1500);
+                } 
+                else if (transcript.includes('radio') || transcript.includes('info')) {
+                    togglePlay(true);
+                    voiceText.textContent = "Lecture radio lancée";
+                } 
+                else if (transcript.includes('stop') || transcript.includes('pause')) {
+                    audio.pause();
+                    closeVideo();
+                    voiceText.textContent = "Lecture arrêtée";
+                    playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+                }
+
+                setTimeout(() => { voiceBar.classList.remove('listening'); }, 3000);
+            }
+        };
+
+        // Redémarrage automatique pour le mode "Hands-free" continu
+        recognition.onend = () => {
+            try { recognition.start(); } catch (e) {}
+        };
+
+        // Lancement initial au premier clic sur l'écran (sécurité navigateur)
+        document.body.addEventListener('click', () => {
+            try { recognition.start(); } catch(e) {}
+        }, { once: true });
+    }
+
+    // --- 6. THEMES ET REGLAGES ---
+    function toggleSettings() {
+        document.getElementById('settings-panel').classList.toggle('show');
+    }
+
+    function changeTheme(themeName) {
+        document.body.className = themeName;
+    }
+</script>
+</body>
+</html>
 
