@@ -1,64 +1,298 @@
-<!DOCTYPE html>
-<html lang="fr" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Player Premium</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root { --bg:#000; --accent:#ff204e; --text:#fff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; }
-        .app { max-width: 420px; margin: auto; height: 100vh; position: relative; overflow: hidden; }
-        .header { display: flex; justify-content: space-between; padding: 20px; z-index: 10; position: relative; }
-        .main { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; }
-        #app-logo { height: 40px; }
-        .station-logo { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
-        .btn-play { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); border: none; color: white; margin-top: 20px; font-size: 24px; cursor: pointer; }
-        .ad-space { position: absolute; bottom: 0; width: 100%; height: 90px; }
-    </style>
-</head>
-<body>
-    <div class="app">
-        <header class="header">
-            <button onclick="loadLive()">°LIVE</button>
-            <nav>
-                <button onclick="loadPodcast()">PODCAST</button>
-                <button onclick="loadReplay()">REPLAY</button>
-            </nav>
-        </header>
+<!DOCTYPE html> 
+<html lang="fr" data-theme="dark"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+    <title>Radio Player - Template</title> 
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+    <style> 
+        :root{--bg:#000000;--surface:#0a0a0a;--text:#fff;--text2:#8a8a8a;--accent:#ff204e;--card:#000000;--border:rgba(255,255,255,.10);--play-bg:#fff;--play-icon:#000;--overlay:rgba(0,0,0,.55)} 
+        [data-theme="light"]{--bg:#ffffff;--surface:#ffffff;--text:#111111;--text2:#6e6e73;--accent:#ff3b30;--card:#ffffff;--border:rgba(0,0,0,.10);--play-bg:#111111;--play-icon:#fff;--overlay:rgba(255,255,255,.72)} 
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none} 
+        body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Inter,Roboto,Helvetica,Arial,sans-serif;display:flex;justify-content:center;min-height:100vh;overflow:hidden} 
+        .app{width:100%;max-width:420px;height:100vh;height:100dvh;position:relative;overflow:hidden;background:var(--bg);border-left:1px solid var(--border);border-right:1px solid var(--border);display:flex;flex-direction:column} 
         
-        <main class="main" id="main-content">
-            <img id="app-logo" src="" alt="Logo">
-            <img id="station-logo" class="station-logo" src="" alt="Station">
-            <h2 id="station-name">Chargement...</h2>
-            <button class="btn-play" onclick="togglePlay()">▶</button>
-        </main>
+        /* Réduction du flou ici (blur de 15px au lieu de 40px) */
+        .bg-image{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;opacity:.7} 
+        .bg-overlay{position:absolute;inset:0;background:var(--overlay);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);z-index:1} 
+        
+        .rss-bar{height:28px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;overflow:hidden;flex-shrink:0;position:relative;z-index:5;transition:opacity .6s ease} 
+        .rss-content{white-space:nowrap;font-size:.8rem;color:var(--text2);padding-left:100%;animation:marquee 26s linear infinite} 
+        .rss-content span{color:var(--accent);font-weight:800;margin-right:8px} 
+        @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}} 
+        .header{height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:5;flex-shrink:0;transition:opacity .6s ease} 
+        
+        /* Style pour le logo de l'app rajouté dans le header */
+        .app-main-logo { height: 24px; object-fit: contain; position: absolute; left: 50%; transform: translateX(-50%); }
 
-        <div id="ad-space" class="ad-space"></div>
-    </div>
+        .badge{display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:800;letter-spacing:1px;color:var(--text2);padding:6px 10px;border-radius:20px;border:1px solid var(--border);background:var(--card); z-index: 2;} 
+        .badge .dot{width:6px;height:6px;border-radius:50%;background:var(--text2)} 
+        .badge.live.active{color:var(--accent);border-color:rgba(255,32,78,.3)} 
+        .badge.live.active .dot{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1.2s infinite} 
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}} 
+        .theme-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0; z-index: 2;} 
+        .main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;position:relative;z-index:5;padding:20px} 
+        .vu-wrap{position:relative;width:230px;height:230px;display:flex;align-items:center;justify-content:center;transition:transform .8s cubic-bezier(.25,.8,.25,1)} 
+        canvas#vu{position:absolute;inset:0;width:100%;height:100%} 
+        .logo-circle{width:130px;height:130px;border-radius:50%;overflow:hidden;background:var(--surface);border:1px solid var(--border);box-shadow:0 14px 34px rgba(0,0,0,.3);z-index:2;display:flex;align-items:center;justify-content:center} 
+        .logo-circle img{width:100%;height:100%;object-fit:cover;display:block} 
+        .logo-circle i{font-size:2.3rem;color:var(--text2)} 
+        .station-name{font-size:1.3rem;font-weight:700;text-align:center;transition:opacity .6s ease;max-width:280px} 
+        .status-text{font-size:.78rem;color:var(--text2);transition:opacity .6s ease;margin-top:-10px} 
+        .btn-play{width:74px;height:74px;border-radius:50%;background:var(--play-bg);color:var(--play-icon);border:none;box-shadow:0 12px 26px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .6s ease} 
+        .btn-play svg{width:28px;height:28px} 
+        .app.daydream .header,.app.daydream .rss-bar,.app.daydream .station-name,.app.daydream .status-text,.app.daydream .btn-play{opacity:0;pointer-events:none} 
+        .app.daydream .vu-wrap{transform:scale(1.55)} 
+    </style> 
+</head> 
+<body> 
+    <audio id="player" preload="none" playsinline></audio> 
+    <div class="app" id="app"> 
+        <div class="bg-image" id="bg-image"></div> 
+        <div class="bg-overlay"></div> 
+        <div class="rss-bar" id="rss-bar" style="display:none"><div class="rss-content" id="rss-text"></div></div> 
+        
+        <div class="header"> 
+            <div class="badge live" id="badge"><div class="dot"></div><span id="badge-label">ON AIR</span></div> 
+            
+            <!-- Le logo de l'app est rajouté ici -->
+            <img id="app-logo" class="app-main-logo" src="" alt="App Logo">
+            
+            <button class="theme-btn" onclick="toggleTheme()" aria-label="Changer de thème"><i class="fa-solid fa-circle-half-stroke"></i></button> 
+        </div> 
+        
+        <div class="main"> 
+            <div class="vu-wrap" id="vu-wrap"> 
+                <canvas id="vu"></canvas> 
+                <div class="logo-circle" id="logo-circle"><i class="fa-solid fa-tower-broadcast"></i></div> 
+            </div> 
+            <div class="station-name" id="station-name">—</div> 
+            <div class="status-text" id="status-text">Initialisation...</div> 
+            <button class="btn-play" id="play-btn" onclick="togglePlay()" aria-label="Lecture / Pause"> 
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg> 
+            </button> 
+        </div> 
+    </div> 
 
-    <script>
+    <script> 
+        /* ===================================================================== 
+           NOUVELLE LOGIQUE : LECTURE DEPUIS LE FICHIER data.json
+        ===================================================================== */ 
+        let globalConfig = {};
+        let currentStation = {};
+        
+        const ICON_PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>'; 
+        const ICON_PAUSE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>'; 
+        const player = document.getElementById('player'); 
+        const playBtn = document.getElementById('play-btn'); 
+        const statusText = document.getElementById('status-text'); 
+        const badge = document.getElementById('badge'); 
+        
+        let hls=null, audioCtx=null, analyser=null, dataArray=null, usingRealAudio=false, silentFrames=0, isPlaying=false, streamLoaded=false, accentColor='#ff204e'; 
+
         async function initApp() {
-            const resp = await fetch('data.json');
-            const data = await resp.json();
-            window.APP_DATA = data;
-            
-            // Mise en place du logo global
-            document.getElementById('app-logo').src = data.global.logo_app;
-            
-            // Charger le Live par défaut
-            loadLive();
+            try {
+                const response = await fetch('data.json');
+                const data = await response.json();
+                
+                globalConfig = data.global;
+                currentStation = data.playlist[0]; // On charge la première émission du JSON
+                
+                applyConfig();
+                document.getElementById('status-text').textContent = "Appuyez pour écouter";
+            } catch(e) {
+                console.error("Erreur de chargement du JSON", e);
+                document.getElementById('status-text').textContent = "Erreur de configuration";
+            }
         }
 
-        function loadLive() {
-            const live = APP_DATA.playlist.find(p => p.isLive);
-            document.getElementById('station-name').textContent = live.emission;
-            document.getElementById('station-logo').src = live.logo_centrale;
+        function updateAppLogo() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if(globalConfig["App-logo-Dark"]) {
+                document.getElementById('app-logo').src = isDark ? globalConfig["App-logo-Dark"] : globalConfig["App-logo-light"];
+            }
         }
 
-        function togglePlay() { alert("Lecture lancée"); }
+        function applyConfig(){ 
+            document.getElementById('station-name').textContent = currentStation["Émission"] || "Radio"; 
+            document.getElementById('badge-label').textContent = currentStation.IsLive ? "ON AIR" : "REPLAY"; 
+            
+            if(!currentStation.IsLive) badge.classList.remove('live'); 
+            else badge.classList.add('live');
 
-        initApp();
-    </script>
-</body>
+            const logoBox = document.getElementById('logo-circle'); 
+            if(currentStation["Logo-Centrale"]){ 
+                logoBox.innerHTML = '<img src="'+currentStation["Logo-Centrale"]+'" alt="'+(currentStation["Émission"]||'Radio')+'">'; 
+            } 
+            if(currentStation["Back-image"]){ 
+                document.getElementById('bg-image').style.backgroundImage = "url('"+currentStation["Back-image"]+"')"; 
+            } 
+            if(currentStation.Rss){ 
+                loadRSS(currentStation.Rss); 
+            } 
+            
+            updateAppLogo();
+            updateAccent(); 
+        } 
+
+        async function loadRSS(url){ 
+            try{ 
+                const res = await fetch(url,{cache:'no-store'}); 
+                const txt = await res.text(); 
+                const xml = new DOMParser().parseFromString(txt,'application/xml'); 
+                const titles = Array.from(xml.querySelectorAll('item > title')).map(n=>n.textContent.trim()).filter(Boolean); 
+                if(titles.length){ 
+                    document.getElementById('rss-bar').style.display='flex'; 
+                    document.getElementById('rss-text').innerHTML = '<span>ACTU</span> ' + titles.join(' • ') + ' • '; 
+                } 
+            }catch(e){ } 
+        } 
+
+        function loadStream(){ 
+            const url = currentStation.Url; 
+            if(hls){ hls.destroy(); hls=null; } 
+            
+            if(url.indexOf('.m3u8')!==-1 && window.Hls && Hls.isSupported()){ 
+                hls = new Hls(); 
+                hls.loadSource(url); 
+                hls.attachMedia(player); 
+                hls.on(Hls.Events.ERROR, function(evt,data){ 
+                    if(data.fatal){ statusText.textContent="Flux indisponible"; } 
+                }); 
+            } else { 
+                player.src = url; 
+            } 
+            streamLoaded = true; 
+        } 
+
+        function togglePlay(){ 
+            if(!streamLoaded) loadStream(); 
+            if(!audioCtx) initAudioAnalyser(); 
+            if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); 
+            
+            if(player.paused){ 
+                statusText.textContent = "Connexion..."; 
+                player.play().catch(function(){ statusText.textContent = "Lecture impossible"; }); 
+            } else { 
+                player.pause(); 
+            } 
+        } 
+
+        function initAudioAnalyser(){ 
+            try{ 
+                audioCtx = new (window.AudioContext||window.webkitAudioContext)(); 
+                const src = audioCtx.createMediaElementSource(player); 
+                analyser = audioCtx.createAnalyser(); 
+                analyser.fftSize = 128; 
+                analyser.smoothingTimeConstant = 0.82; 
+                src.connect(analyser); 
+                analyser.connect(audioCtx.destination); 
+                dataArray = new Uint8Array(analyser.frequencyBinCount); 
+                usingRealAudio = true; 
+            }catch(e){ usingRealAudio = false; } 
+        } 
+
+        player.addEventListener('playing', function(){ 
+            isPlaying = true; 
+            statusText.textContent = currentStation.IsLive ? "En direct" : "Lecture en cours"; 
+            badge.classList.add('active'); 
+            playBtn.innerHTML = ICON_PAUSE; 
+        }); 
+        player.addEventListener('pause', function(){ 
+            isPlaying = false; 
+            statusText.textContent = "En pause"; 
+            badge.classList.remove('active'); 
+            playBtn.innerHTML = ICON_PLAY; 
+        }); 
+        player.addEventListener('waiting', function(){ statusText.textContent = "Mise en mémoire tampon..."; }); 
+        player.addEventListener('error', function(){ statusText.textContent = "Flux indisponible"; }); 
+
+        /* ===== VU METER ===== */ 
+        const canvas = document.getElementById('vu'); 
+        const ctx = canvas.getContext('2d'); 
+        function resizeCanvas(){ 
+            const wrap = document.getElementById('vu-wrap'); 
+            const dpr = window.devicePixelRatio||1; 
+            const size = wrap.clientWidth; 
+            canvas.width = size*dpr; 
+            canvas.height = size*dpr; 
+            ctx.setTransform(dpr,0,0,dpr,0,0); 
+        } 
+        window.addEventListener('resize', resizeCanvas); 
+        
+        function updateAccent(){ accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); } 
+        
+        let simPhase = 0; 
+        function getLevels(barCount){ 
+            if(usingRealAudio && analyser && isPlaying){ 
+                analyser.getByteFrequencyData(dataArray); 
+                let sum=0; 
+                for(let i=0;i<dataArray.length;i++){ sum+=dataArray[i]; } 
+                if(sum<4){ silentFrames++; } else { silentFrames=0; } 
+                if(silentFrames<90){ 
+                    const out=[]; 
+                    for(let i=0;i<barCount;i++){ out.push(dataArray[Math.floor(i*dataArray.length/barCount)]/255); } 
+                    return out; 
+                } 
+            } 
+            simPhase += 0.045; 
+            const out=[]; 
+            for(let i=0;i<barCount;i++){ 
+                const base = isPlaying ? (Math.sin(simPhase+i*0.5)+1)/2*0.6+Math.random()*0.15 : 0.04; 
+                out.push(base); 
+            } 
+            return out; 
+        } 
+        
+        function drawVU(){ 
+            requestAnimationFrame(drawVU); 
+            const size = document.getElementById('vu-wrap').clientWidth; 
+            ctx.clearRect(0,0,size,size); 
+            const barCount = 40; 
+            const levels = getLevels(barCount); 
+            const cx=size/2, cy=size/2, r0=size*0.30; 
+            ctx.strokeStyle = accentColor; 
+            ctx.lineCap = 'round'; 
+            ctx.lineWidth = 3; 
+            for(let i=0;i<barCount;i++){ 
+                const angle = (i/barCount)*Math.PI*2 - Math.PI/2; 
+                const len = 6 + levels[i]*(size*0.16); 
+                const x1 = cx+Math.cos(angle)*r0, y1 = cy+Math.sin(angle)*r0; 
+                const x2 = cx+Math.cos(angle)*(r0+len), y2 = cy+Math.sin(angle)*(r0+len); 
+                ctx.globalAlpha = 0.35+levels[i]*0.65; 
+                ctx.beginPath(); 
+                ctx.moveTo(x1,y1); 
+                ctx.lineTo(x2,y2); 
+                ctx.stroke(); 
+            } 
+            ctx.globalAlpha = 1; 
+        } 
+
+        /* ===== DAYDREAM ===== */ 
+        let idleTimer = null; 
+        function resetIdle(){ 
+            document.getElementById('app').classList.remove('daydream'); 
+            clearTimeout(idleTimer); 
+            idleTimer = setTimeout(function(){ document.getElementById('app').classList.add('daydream'); }, 60000); 
+        } 
+        ['touchstart','mousedown','keydown'].forEach(function(evt){ document.addEventListener(evt, resetIdle, {passive:true}); }); 
+
+        /* ===== THEME ===== */ 
+        function toggleTheme(){ 
+            const html = document.documentElement; 
+            html.setAttribute('data-theme', html.getAttribute('data-theme')==='dark' ? 'light' : 'dark'); 
+            updateAppLogo();
+            updateAccent(); 
+        } 
+
+        /* ===== INIT ===== */ 
+        window.onload = function(){ 
+            initApp(); // Charge le JSON avant de configurer
+            resizeCanvas(); 
+            drawVU(); 
+            resetIdle(); 
+        }; 
+    </script> 
+</body> 
 </html>
