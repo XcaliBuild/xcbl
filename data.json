@@ -1,40 +1,21 @@
 {
   "global": {
-    "entreprise": "XcaliBuild Radio",
-    "adresse": "123 Rue du Test, 75000 Paris",
-    "telephone": "+33 1 23 45 67 89",
-    "fax": "01 23 45 67 90",
-    "email": "contact@xcalibuild.com",
-    "copyright": "© 2026 XcaliBuild",
-    "legal_terms": "Conditions d'utilisation...",
-    "logo_entreprise": "https://via.placeholder.com/150",
-    "send_message": true,
-    "ads_enabled": true,
-    "ads_type": "image",
-    "ads_url": "https://via.placeholder.com/728x90",
-    "ads_interval": 30000,
     "App-logo-light": "https://www.dropbox.com/scl/fi/x670k6ky35zykmmgcj6u3/pixomatic_524202616145092.png?rlkey=qec612if6dth1uif1el1r4dlp&st=a1ogvxa2&raw=1",
     "App-logo-Dark": "https://www.dropbox.com/scl/fi/ph24ok0itp7ziuglcn71i/pixomatic_524202616144221.png?rlkey=0w266nsju82j2ikagvvtpye5m&st=6p953f07&raw=1"
   },
   "playlist": [
     {
-      "Emission": "Midi BFM",
-      "Crew": "Présenté par Jean Dupont",
-      "Stream-type": "live",
-      "IsLive": true,
+      "Émission": "Midi BFM",
+      "Logo-Centrale": "https://i.ytimg.com/vi/5hrWYXH-xS8/maxresdefault.jpg",
+      "Back-image": "https://images.bfmtv.com/DUe-9X-ztLbJYOc_eOjlAZGonUU=/0x0:1000x1500/190x0/emission/BFM-Midi-week-end-mosaique-portrait-878_2.jpg",
+      "Date de l'émission": "18/08/2026",
+      "Start": "11:59",
+      "End": "13:00",
       "Url": "https://hls-bfmbusiness.nextradiotv.com/ssai/master.m3u8",
-      "Logo-Centrale": "https://mradio.fr/media/podcast/thumb/430x430_podcast-cette-difference-peut-diviser-pendant-les-vacances-31-juillet-2026_6a69b75537f6c.png",
-      "Back-image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGhXk-FIl7-qVjYfGD2sjNpc6zzqPLE8fatCOao2-3wAs0DNYL99ywwdKC&s=10",
-      "Info": "Le point complet sur l'actu."
-    },
-    {
-      "Emission": "Jazz Night",
-      "Crew": "DJ Sax",
-      "Stream-type": "replay",
-      "IsLive": false,
-      "Url": "https://www.w3schools.com/html/horse.mp3",
-      "Logo-Centrale": "https://via.placeholder.com/150",
-      "Info": "Replay du 17/08/2026"
+      "Rss": "https://raw.githubusercontent.com/spians/awesome-RSS-feeds/master/countries/with_category/France.opml",
+      "IsLive": true,
+      "Info": "Le point complet sur l'actualité économique.",
+      "Link": "https://www.bfmtv.com"
     }
   ]
 }
