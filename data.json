@@ -1,24 +1,21 @@
 {
   "global": {
-    "entreprise": "XcaliBuild Radio",
-    "adresse": "123 Street, Paris",
-    "email": "contact@xcalibuild.com",
-    "logo_app": "https://www.dropbox.com/scl/fi/ph24ok0itp7ziuglcn71i/pixomatic_524202616144221.png?rlkey=0w266nsju82j2ikagvvtpye5m&st=6p953f07&raw=1",
-    "send_message": true,
-    "ads_enabled": true,
-    "ads_url": "https://via.placeholder.com/728x90",
-    "ads_interval": 30000
+    "App-logo-light": "https://www.dropbox.com/scl/fi/x670k6ky35zykmmgcj6u3/pixomatic_524202616145092.png?rlkey=qec612if6dth1uif1el1r4dlp&st=a1ogvxa2&raw=1",
+    "App-logo-Dark": "https://www.dropbox.com/scl/fi/ph24ok0itp7ziuglcn71i/pixomatic_524202616144221.png?rlkey=0w266nsju82j2ikagvvtpye5m&st=6p953f07&raw=1"
   },
   "playlist": [
     {
-      "emission": "Midi BFM",
-      "crew": "Jean Dupont",
-      "stream_type": "live",
-      "isLive": true,
-      "url": "https://hls-bfmbusiness.nextradiotv.com/ssai/master.m3u8",
-      "logo_centrale": "https://i.ytimg.com/vi/5hrWYXH-xS8/maxresdefault.jpg",
-      "back_image": "https://images.bfmtv.com/DUe-9X-ztLbJYOc_eOjlAZGonUU=/0x0:1000x1500/190x0/emission/BFM-Midi-week-end-mosaique-portrait-878_2.jpg",
-      "info": "Le point complet sur l'actu."
+      "Émission": "Midi BFM",
+      "Logo-Centrale": "https://i.ytimg.com/vi/5hrWYXH-xS8/maxresdefault.jpg",
+      "Back-image": "https://images.bfmtv.com/DUe-9X-ztLbJYOc_eOjlAZGonUU=/0x0:1000x1500/190x0/emission/BFM-Midi-week-end-mosaique-portrait-878_2.jpg",
+      "Date de l'émission": "18/08/2026",
+      "Start": "11:59",
+      "End": "13:00",
+      "Url": "https://hls-bfmbusiness.nextradiotv.com/ssai/master.m3u8",
+      "Rss": "https://raw.githubusercontent.com/spians/awesome-RSS-feeds/master/countries/with_category/France.opml",
+      "IsLive": true,
+      "Info": "Le point complet sur l'actualité économique.",
+      "Link": "https://www.bfmtv.com"
     }
   ]
 }
