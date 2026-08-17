@@ -3,115 +3,350 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Radio Player - Portrait</title>
+<title>Radio Player - Template</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-:root{--bg:#0d0d0f;--surface:#1a1a1d;--text:#fff;--text2:#8a8a8a;--accent:#ff204e;--mark:#2a2a2e;--off:#333;--on:#ff204e;--card:#151518;--border:rgba(255,255,255,.08);--play-bg:#fff;--play-icon:#000}
-[data-theme="light"]{--bg:#f2f2f6;--surface:#fff;--text:#1c1c1e;--text2:#8e8e93;--accent:#ff3b30;--mark:#d1d1d6;--off:#d1d1d6;--on:#ff3b30;--card:#fff;--border:rgba(0,0,0,.08);--play-bg:#1c1c1e;--play-icon:#fff}
+:root{
+  --bg:#000000;--surface:#0a0a0a;--card:#0e0e10;--text:#fff;--text2:#8a8a8a;
+  --accent:#ff204e;--border:rgba(255,255,255,.08);--overlay:rgba(0,0,0,.6);
+  --play-bg:#fff;--play-icon:#000;
+}
+[data-theme="light"]{
+  --bg:#ffffff;--surface:#f5f5f7;--card:#ffffff;--text:#1c1c1e;--text2:#8e8e93;
+  --accent:#ff3b30;--border:rgba(0,0,0,.08);--overlay:rgba(255,255,255,.65);
+  --play-bg:#1c1c1e;--play-icon:#fff;
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Inter,Roboto,Helvetica,Arial,sans-serif;display:flex;justify-content:center;min-height:100vh;overflow:hidden}
 #media-player{display:none}
 .app{width:100%;max-width:420px;height:100vh;height:100dvh;background:var(--bg);display:flex;flex-direction:column;border-left:1px solid var(--border);border-right:1px solid var(--border);position:relative;overflow:hidden}
-.rss-bar{height:28px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;overflow:hidden;flex-shrink:0}
-.rss-content{white-space:nowrap;font-size:.82rem;color:var(--text2);padding-left:100%;animation:marquee 18s linear infinite}
+
+/* background artwork */
+.bg-layer{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(.55) saturate(1.2);transform:scale(1.15);opacity:0;transition:opacity .6s}
+[data-theme="light"] .bg-layer{filter:blur(38px) brightness(1.05) saturate(1.1);}
+.bg-layer.loaded{opacity:.55}
+.bg-scrim{position:absolute;inset:0;background:var(--overlay)}
+
+/* rss ticker */
+.rss-bar{height:28px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;overflow:hidden;flex-shrink:0;position:relative;z-index:2;display:none}
+.rss-bar.show{display:flex}
+.rss-content{white-space:nowrap;font-size:.8rem;color:var(--text2);padding-left:100%;animation:marquee 22s linear infinite}
 .rss-content span{color:var(--accent);font-weight:800;margin-right:8px}
 @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-.header{height:56px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
-.logo{height:26px;max-width:140px;object-fit:contain}
-.onair{display:flex;align-items:center;gap:6px;font-size:.75rem;font-weight:800;letter-spacing:1.2px;color:var(--off);padding:6px 10px;border-radius:20px;border:1px solid var(--border);background:var(--card);transition:.3s}
-.onair.active{color:var(--on);border-color:rgba(255,32,78,.3);background:rgba(255,32,78,.08);box-shadow:0 0 12px rgba(255,32,78,.25)}
-.onair.dot{width:7px;height:7px;border-radius:50%;background:var(--off);transition:.3s}
-.onair.active.dot{background:var(--on);box-shadow:0 0 8px var(--on);animation:pulse 1.2s infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+
+.header{height:56px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:transparent;flex-shrink:0;position:relative;z-index:2}
+.logo{height:26px;max-width:150px;object-fit:contain}
+.onair{display:flex;align-items:center;gap:6px;font-size:.7rem;font-weight:800;letter-spacing:1.2px;color:var(--text2);padding:6px 10px;border-radius:20px;border:1px solid var(--border);background:var(--card);transition:.3s}
+.onair.active{color:var(--accent);border-color:rgba(255,32,78,.3);background:rgba(255,32,78,.08);box-shadow:0 0 12px rgba(255,32,78,.2)}
+.onair .dot{width:7px;height:7px;border-radius:50%;background:var(--text2);transition:.3s}
+.onair.active .dot{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
 .theme-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.main{flex:1;display:flex;flex-direction:column;padding:18px 18px 10px;gap:14px;overflow:hidden}
-.cover{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px}
-.freq{font-size:3.2rem;font-weight:900;letter-spacing:-1.5px;line-height:1;display:flex;align-items:baseline;gap:6px}
-.freq small{font-size:1rem;font-weight:600;color:var(--text2)}
-.station-logo{width:110px;height:110px;border-radius:22px;object-fit:cover;background:var(--surface);border:1px solid var(--border);padding:10px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
-.station-name{font-size:1.35rem;font-weight:700;line-height:1.2;max-width:90%}
-.meta{font-size:.82rem;color:var(--text2);display:flex;gap:8px}
-.tuner-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px 14px 10px;margin-top:auto}
-.tuner-label{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--text2);display:flex;justify-content:space-between;margin-bottom:8px}
-.tuner-wrapper{width:100%;height:62px;position:relative;display:flex;align-items:flex-end;touch-action:pan-x;cursor:grab}
-.tuner-band{width:100%;height:44px;position:relative;overflow:hidden}
-.tuner-scale{width:100%;height:20px;position:absolute;bottom:0;background-image:repeating-linear-gradient(to right,var(--mark) 0,var(--mark) 2px,transparent 2px,transparent 8%)}
-.tuner-scale::after{content:'';width:100%;height:32px;position:absolute;bottom:0;left:0;background-image:repeating-linear-gradient(to right,var(--text2) 0,var(--text2) 2px,transparent 2px,transparent 20%);opacity:.6}
-.tuner-needle{position:absolute;bottom:0;height:54px;width:3px;background:var(--accent);left:50%;transform:translateX(-50%);transition:left.35s cubic-bezier(.25,.8,.25,1);box-shadow:0 0 10px var(--accent);z-index:2;border-radius:4px}
-.tuner-needle::before{content:'';position:absolute;bottom:-4px;left:-3px;width:9px;height:9px;border-radius:50%;background:var(--accent)}
-.controls{display:flex;justify-content:center;align-items:center;gap:22px;padding:14px 0 6px}
-.btn{width:52px;height:52px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.btn-play{width:72px;height:72px;background:var(--play-bg);color:var(--play-icon);border:none;box-shadow:0 10px 24px rgba(0,0,0,.3)}
-.progress{height:2px;background:var(--accent);width:0%;transition:width.3s;flex-shrink:0}
+
+.main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:20px;position:relative;z-index:2}
+.station-logo-wrap{width:180px;height:180px;border-radius:32px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.station-logo-wrap img{width:100%;height:100%;object-fit:cover;display:none}
+.station-logo-wrap .fallback-icon{font-size:3rem;color:var(--text2)}
+.station-name{font-size:1.5rem;font-weight:800;text-align:center;max-width:92%;line-height:1.25}
+.station-status{font-size:.75rem;font-weight:700;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase}
+
+.controls{display:flex;justify-content:center;align-items:center;padding:6px 0 10px}
+.btn-play{width:82px;height:82px;border-radius:50%;background:var(--play-bg);color:var(--play-icon);border:none;box-shadow:0 12px 28px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.btn-play svg{width:32px;height:32px}
+
 .loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--accent);font-weight:600;background:var(--card);border:1px solid var(--border);padding:10px 16px;border-radius:20px;z-index:5}
-.list-toggle{position:absolute;top:66px;right:12px;width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;z-index:20;cursor:pointer}
-.stations-drawer{position:absolute;inset:0;background:var(--bg);z-index:100;transform:translateY(100%);transition:transform.36s cubic-bezier(.25,.8,.25,1);display:flex;flex-direction:column}
-.stations-drawer.open{transform:translateY(0)}
-.drawer-head{height:56px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface)}
-.drawer-list{flex:1;overflow-y:auto;padding:8px}
-.row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;cursor:pointer;border:1px solid transparent}
-.row.active{background:var(--card);border-color:var(--border)}
-.row img{width:44px;height:44px;border-radius:10px;object-fit:cover;background:var(--surface)}
+
+/* daydream / eco-mode VU meter */
+.daydream{position:absolute;inset:0;background:var(--bg);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:0;pointer-events:none;transition:opacity .8s ease}
+.daydream.show{opacity:1;pointer-events:auto}
+.vu-canvas{width:280px;height:280px}
+.daydream-logo{width:64px;height:64px;border-radius:16px;object-fit:cover;background:var(--card);border:1px solid var(--border);position:absolute}
+.daydream-name{position:absolute;bottom:calc(50% - 150px);font-size:.9rem;color:var(--text2);letter-spacing:1px}
 </style>
 </head>
 <body>
-<video id="media-player" playsinline></video>
+<audio id="media-player" playsinline crossorigin="anonymous"></audio>
+
 <div class="app" id="app">
-  <div class="rss-bar" id="rss-bar" style="display:none"><div class="rss-content" id="rss-content-text"></div></div>
-  <div class="progress" id="progress"></div>
+  <div class="bg-layer" id="bg-layer"></div>
+  <div class="bg-scrim"></div>
+
+  <div class="rss-bar" id="rss-bar"><div class="rss-content" id="rss-content-text"></div></div>
+
   <div class="header">
     <img id="main-app-logo" class="logo" alt="logo">
     <div style="display:flex;gap:10px;align-items:center">
-      <div class="onair" id="onair"><div class="dot"></div><span>ON AIR</span></div>
+      <div class="onair" id="onair"><div class="dot"></div><span id="onair-label">ON AIR</span></div>
       <button class="theme-btn" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i></button>
     </div>
   </div>
-  <div class="list-toggle" onclick="toggleDrawer()"><i class="fa-solid fa-list"></i></div>
+
   <div class="main">
-    <div class="loading" id="loading-text">Recherche...</div>
-    <div class="cover" id="cover" style="opacity:0">
-      <div class="freq"><span id="ui-frequency">--.-</span><small>MHz</small></div>
-      <img id="ui-logo" class="station-logo" alt="" style="display:none">
-      <div class="station-name" id="ui-name"></div>
-      <div class="meta"><span id="ui-category"></span><span id="ui-country"></span></div>
+    <div class="loading" id="loading-text">Connexion...</div>
+    <div id="cover" style="display:none;flex-direction:column;align-items:center;gap:18px">
+      <div class="station-logo-wrap">
+        <img id="ui-logo" alt="">
+        <i class="fa-solid fa-tower-broadcast fallback-icon" id="ui-logo-fallback"></i>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div class="station-name" id="ui-name"></div>
+        <div class="station-status" id="ui-status"></div>
+      </div>
     </div>
-    <div class="tuner-card">
-      <div class="tuner-label"><span>FM TUNER</span><span id="station-count">-- stations</span></div>
-      <div class="tuner-wrapper" id="tuner-touch-zone"><div class="tuner-band"><div class="tuner-scale"></div><div class="tuner-needle" id="tuner-needle"></div></div></div>
-    </div>
-    <div class="controls">
-      <button class="btn" onclick="prevStation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button>
-      <button class="btn btn-play" id="play-pause-btn" onclick="togglePlay()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></button>
-      <button class="btn" onclick="nextStation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></button>
+    <div class="controls" id="controls" style="display:none">
+      <button class="btn-play" id="play-pause-btn" onclick="togglePlay()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+      </button>
     </div>
   </div>
-  <div class="stations-drawer" id="drawer">
-    <div class="drawer-head"><b>Stations</b><button class="theme-btn" onclick="toggleDrawer()"><i class="fa-solid fa-xmark"></i></button></div>
-    <div class="drawer-list" id="drawer-list"></div>
+
+  <div class="daydream" id="daydream">
+    <canvas class="vu-canvas" id="vu-canvas" width="280" height="280"></canvas>
+    <img class="daydream-logo" id="daydream-logo" alt="">
+    <div class="daydream-name" id="daydream-name"></div>
   </div>
 </div>
+
 <script>
-const M3U_URL = "https://raw.githubusercontent.com/XcaliBuild/xcbl/refs/heads/main/Radio.m3u";
-const LOGO_DARK = "https://www.dropbox.com/scl/fi/ph24ok0itp7ziuglcn71i/pixomatic_524202616144221.png?rlkey=0w266nsju82j2ikagvvtpye5m&st=6p953f07&raw=1";
-const LOGO_LIGHT = "https://www.dropbox.com/scl/fi/x670k6ky35zykmmgcj6u3/pixomatic_524202616145092.png?rlkey=qec612if6dth1uif1el1r4dlp&st=a1ogvxa2&raw=1";
+/* =========================================================
+   CONFIGURATION — playlist JSON
+   Un seul objet = une seule chaîne (cas le plus courant).
+   Plusieurs objets possibles pour réutiliser ce même fichier
+   sur une autre chaîne (seul l'index 0 est joué automatiquement).
+   - live       : true = flux direct (m3u8/HLS), false = fichier (mp3/aac) type rediffusion
+   - station    : nom de la chaîne affiché à l'écran
+   - rss        : url d'un flux RSS/XML (actus, playlist en cours...) — optionnel
+   - logo       : photo de profil / logo de l'émission ou de la chaîne
+   - back_image : image de fond (arrière-plan flouté)
+   - url        : url du flux audio (m3u8 si live:true, mp3/aac si live:false)
+========================================================= */
+const RADIO_PLAYLIST = [
+  {
+    live: true,
+    station: "Sud Ouest Radio",
+    rss: "",
+    logo: "",
+    back_image: "",
+    url: "https://your-stream-url.example.com/stream.m3u8"
+  }
+];
+
+const LOGO_DARK = "";
+const LOGO_LIGHT = "";
+const IDLE_TIMEOUT_MS = 60000; // 1 minute avant le mode veille (daydream)
+
 const iconPlay = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
 const iconPause = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
-let stations=[];let currentIndex=0;const video=document.getElementById('media-player');let hls=null;
-async function fetchM3U(){try{const r=await fetch(M3U_URL,{cache:"no-store"});const txt=await r.text();stations=parseM3U(txt);document.getElementById('loading-text').style.display='none';document.getElementById('cover').style.opacity='1';document.getElementById('station-count').textContent=stations.length+" stations";buildDrawer();if(stations.length>0)loadStation(0);}catch(e){document.getElementById('loading-text').textContent="Erreur connexion";}}
-function parseM3U(data){const lines=data.split('\n');const out=[];let cur={};for(let i=0;i<lines.length;i++){const line=lines[i].trim();if(line.startsWith('#EXTINF:')){const name=line.split(',').slice(1).join(',').trim()||"Radio";cur.name=name;const logo=line.match(/tvg-logo="([^"]+)"/);const group=line.match(/group-title="([^"]+)"/);const country=line.match(/tvg-country="([^"]+)"/);const rss=line.match(/rss="([^"]+)"/);cur.logo=logo?logo[1]:null;cur.category=group?group[1]:"";cur.country=country?country[1]:"";cur.rss=rss?rss[1]:"";}else if(line &&!line.startsWith('#')){cur.url=line;let f=87.5+(out.length*0.28);if(f>108)f=87.5+((out.length%60)*0.28);cur.frequency=f.toFixed(1);out.push(cur);cur={};}}return out;}
-function buildDrawer(){const list=document.getElementById('drawer-list');list.innerHTML="";stations.forEach((s,i)=>{const row=document.createElement('div');row.className='row'+(i===currentIndex?' active':'');row.onclick=function(){loadStation(i);toggleDrawer();};row.innerHTML='<img src="'+(s.logo||'')+'" onerror="this.style.display=\'none\'"><div><b>'+s.name+'</b><small>'+(s.category||'')+' '+(s.country||'')+'</small></div><div style="margin-left:auto;font-weight:800">'+s.frequency+'</div>';list.appendChild(row);});}
-function loadStation(index){if(!stations.length)return;currentIndex=index;const s=stations[index];document.getElementById('ui-name').textContent=s.name;document.getElementById('ui-frequency').textContent=s.frequency;document.getElementById('ui-category').textContent=s.category||"";document.getElementById('ui-country').textContent=s.country||"";const logoEl=document.getElementById('ui-logo');if(s.logo){logoEl.src=s.logo;logoEl.style.display='block';}else{logoEl.style.display='none';}const rssBar=document.getElementById('rss-bar');const rssTxt=document.getElementById('rss-content-text');if(s.rss){rssBar.style.display='flex';rssTxt.innerHTML='<span>INFO:</span> '+s.rss;}else{rssBar.style.display='none';}const needle=document.getElementById('tuner-needle');const pct=(index/Math.max(1,stations.length-1))*100;needle.style.left=pct+'%';document.getElementById('progress').style.width=((index+1)/stations.length*100)+'%';document.querySelectorAll('.row').forEach((r,i)=>{r.classList.toggle('active',i===index);});playMedia(s.url);}
-function playMedia(url){if(hls){hls.destroy();hls=null;}document.getElementById('onair').classList.remove('active');if(url.includes('.m3u8') && window.Hls && Hls.isSupported()){hls=new Hls();hls.loadSource(url);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,function(){video.play().catch(function(){});});}else{video.src=url;video.load();video.play().catch(function(){});}}
-function togglePlay(){const btn=document.getElementById('play-pause-btn');if(video.paused){video.play();btn.innerHTML=iconPause;btn.classList.add('is-playing');}else{video.pause();btn.innerHTML=iconPlay;btn.classList.remove('is-playing');}}
-function nextStation(){if(!stations.length)return;currentIndex=(currentIndex+1)%stations.length;loadStation(currentIndex);}
-function prevStation(){if(!stations.length)return;currentIndex=(currentIndex-1+stations.length)%stations.length;loadStation(currentIndex);}
-video.addEventListener('playing',function(){document.getElementById('onair').classList.add('active');const b=document.getElementById('play-pause-btn');b.innerHTML=iconPause;b.classList.add('is-playing');});
-video.addEventListener('pause',function(){document.getElementById('onair').classList.remove('active');const b=document.getElementById('play-pause-btn');b.innerHTML=iconPlay;b.classList.remove('is-playing');});
-let sx=0;document.getElementById('tuner-touch-zone').addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;},{passive:true});document.getElementById('tuner-touch-zone').addEventListener('touchend',function(e){const ex=e.changedTouches[0].screenX;if(ex<sx-40)nextStation();if(ex>sx+40)prevStation();},{passive:true});
-function toggleTheme(){const html=document.documentElement;const logo=document.getElementById('main-app-logo');if(html.getAttribute('data-theme')==='dark'){html.setAttribute('data-theme','light');logo.src=LOGO_LIGHT;}else{html.setAttribute('data-theme','dark');logo.src=LOGO_DARK;}}
-function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');}
-window.onload=function(){document.getElementById('main-app-logo').src=LOGO_DARK;fetchM3U();};
+
+const audio = document.getElementById('media-player');
+let hls = null;
+let station = null;
+let isPlaying = false;
+
+function initStation(){
+  station = RADIO_PLAYLIST[0];
+  document.getElementById('loading-text').style.display = 'none';
+  document.getElementById('cover').style.display = 'flex';
+  document.getElementById('controls').style.display = 'flex';
+
+  document.getElementById('ui-name').textContent = station.station || "Ma Radio";
+  document.getElementById('ui-status').textContent = station.live ? "En direct" : "Rediffusion";
+  document.getElementById('onair-label').textContent = station.live ? "ON AIR" : "REPLAY";
+  document.getElementById('daydream-name').textContent = station.station || "";
+
+  const logoImg = document.getElementById('ui-logo');
+  const fallback = document.getElementById('ui-logo-fallback');
+  const daydreamLogo = document.getElementById('daydream-logo');
+  if (station.logo){
+    logoImg.src = station.logo;
+    logoImg.style.display = 'block';
+    fallback.style.display = 'none';
+    daydreamLogo.src = station.logo;
+    daydreamLogo.style.display = 'block';
+  } else {
+    logoImg.style.display = 'none';
+    fallback.style.display = 'block';
+    daydreamLogo.style.display = 'none';
+  }
+
+  const bg = document.getElementById('bg-layer');
+  if (station.back_image){
+    bg.style.backgroundImage = "url('" + station.back_image + "')";
+    requestAnimationFrame(()=> bg.classList.add('loaded'));
+  }
+
+  if (station.rss){
+    loadRss(station.rss);
+  }
+
+  loadMedia(station.url, station.live);
+}
+
+function loadMedia(url, live){
+  if (hls){ hls.destroy(); hls = null; }
+  document.getElementById('onair').classList.remove('active');
+  if (live && url.includes('.m3u8') && window.Hls && Hls.isSupported()){
+    hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(audio);
+  } else if (live && audio.canPlayType('application/vnd.apple.mpegurl')){
+    audio.src = url;
+  } else {
+    audio.src = url;
+  }
+}
+
+function togglePlay(){
+  const btn = document.getElementById('play-pause-btn');
+  if (audio.paused){
+    initAudioAnalyser();
+    audio.play().catch(()=>{});
+  } else {
+    audio.pause();
+  }
+}
+
+audio.addEventListener('playing', function(){
+  isPlaying = true;
+  document.getElementById('onair').classList.add('active');
+  document.getElementById('play-pause-btn').innerHTML = iconPause;
+});
+audio.addEventListener('pause', function(){
+  isPlaying = false;
+  document.getElementById('onair').classList.remove('active');
+  document.getElementById('play-pause-btn').innerHTML = iconPlay;
+});
+audio.addEventListener('waiting', function(){
+  document.getElementById('onair').classList.remove('active');
+});
+
+/* ===================== RSS ticker ===================== */
+async function loadRss(url){
+  try{
+    const res = await fetch(url, { cache: "no-store" });
+    const txt = await res.text();
+    const xml = new DOMParser().parseFromString(txt, "text/xml");
+    const items = Array.from(xml.querySelectorAll("item title")).slice(0, 6);
+    const titles = items.map(n => n.textContent.trim()).filter(Boolean);
+    if (titles.length){
+      document.getElementById('rss-content-text').innerHTML = '<span>INFO:</span> ' + titles.join('  •  ');
+      document.getElementById('rss-bar').classList.add('show');
+    }
+  } catch(e){
+    // flux RSS indisponible ou bloqué par CORS — on masque simplement la bande
+  }
+}
+
+/* ===================== Thème ===================== */
+function toggleTheme(){
+  const html = document.documentElement;
+  const logo = document.getElementById('main-app-logo');
+  if (html.getAttribute('data-theme') === 'dark'){
+    html.setAttribute('data-theme', 'light');
+    if (LOGO_LIGHT) logo.src = LOGO_LIGHT;
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    if (LOGO_DARK) logo.src = LOGO_DARK;
+  }
+}
+
+/* ===================== VU Meter (canvas radial) ===================== */
+const vuCanvas = document.getElementById('vu-canvas');
+const vuCtx = vuCanvas.getContext('2d');
+const BAR_COUNT = 48;
+let barLevels = new Array(BAR_COUNT).fill(0.05);
+let barTargets = new Array(BAR_COUNT).fill(0.05);
+
+let audioCtx = null, analyser = null, freqData = null, sourceNode = null, hasRealAudioData = false;
+
+function initAudioAnalyser(){
+  if (audioCtx) return;
+  try{
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaElementSource(audio);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 128;
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    sourceNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+  } catch(e){
+    // flux sans en-têtes CORS (fréquent en radio) : on reste sur l'animation simulée
+    audioCtx = null; analyser = null;
+  }
+}
+
+function updateBarTargets(){
+  if (analyser){
+    analyser.getByteFrequencyData(freqData);
+    let sum = 0;
+    for (let i = 0; i < BAR_COUNT; i++){
+      const v = freqData[Math.floor(i * freqData.length / BAR_COUNT)] / 255;
+      sum += v;
+      barTargets[i] = isPlaying ? Math.max(0.06, v) : 0.05;
+    }
+    hasRealAudioData = sum > 0.05;
+  }
+  if (!analyser || !hasRealAudioData){
+    for (let i = 0; i < BAR_COUNT; i++){
+      barTargets[i] = isPlaying ? (0.15 + Math.random() * 0.85) : 0.05;
+    }
+  }
+}
+
+function drawVu(){
+  const w = vuCanvas.width, h = vuCanvas.height, cx = w/2, cy = h/2;
+  vuCtx.clearRect(0,0,w,h);
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  const innerR = 46, maxLen = 70;
+  for (let i = 0; i < BAR_COUNT; i++){
+    barLevels[i] += (barTargets[i] - barLevels[i]) * 0.18;
+    const angle = (i / BAR_COUNT) * Math.PI * 2 - Math.PI/2;
+    const len = innerR + barLevels[i] * maxLen;
+    const x1 = cx + Math.cos(angle) * innerR;
+    const y1 = cy + Math.sin(angle) * innerR;
+    const x2 = cx + Math.cos(angle) * len;
+    const y2 = cy + Math.sin(angle) * len;
+    vuCtx.strokeStyle = accent;
+    vuCtx.globalAlpha = 0.35 + barLevels[i] * 0.65;
+    vuCtx.lineWidth = 3;
+    vuCtx.lineCap = 'round';
+    vuCtx.beginPath();
+    vuCtx.moveTo(x1,y1);
+    vuCtx.lineTo(x2,y2);
+    vuCtx.stroke();
+  }
+  vuCtx.globalAlpha = 1;
+}
+
+let vuFrameCount = 0;
+function vuLoop(){
+  vuFrameCount++;
+  if (vuFrameCount % 3 === 0) updateBarTargets();
+  drawVu();
+  requestAnimationFrame(vuLoop);
+}
+vuLoop();
+
+/* ===================== Mode veille (daydream / eco) ===================== */
+let idleTimer = null;
+const daydreamEl = document.getElementById('daydream');
+
+function resetIdleTimer(){
+  daydreamEl.classList.remove('show');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(()=> daydreamEl.classList.add('show'), IDLE_TIMEOUT_MS);
+}
+['touchstart','mousedown','mousemove','keydown','scroll'].forEach(evt=>{
+  document.addEventListener(evt, resetIdleTimer, { passive: true });
+});
+daydreamEl.addEventListener('click', resetIdleTimer);
+resetIdleTimer();
+
+window.onload = function(){
+  if (LOGO_DARK) document.getElementById('main-app-logo').src = LOGO_DARK;
+  initStation();
+};
 </script>
 </body>
 </html>
